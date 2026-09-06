@@ -1,6 +1,10 @@
-#include "layer.hpp"
+#include "src/mnist_reader/reader.hpp"
+#include <array>
+#include <vector>
+#include <iostream>
+
 
 int main(){
-    Layer Layer1(5, 1);
+    auto [train, label] = get_training_data();
     return 0;
 }
