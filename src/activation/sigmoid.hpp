@@ -1,27 +1,27 @@
 #pragma once
 
 #include "activation.hpp"
+#include "activation.hpp"
 #include <cmath>
 #include <vector>
+
 class Sigmoid: public ActivationFunction {
     public:
-        std::vector<float> activate(const std::vector<float>& vector) const override {
-            std::vector<float> result;
-            result.reserve(vector.size());
+        Matrix<Layout::ColumnMajor> activate(const Matrix<Layout::ColumnMajor>& z) const override {
+            Matrix<Layout::ColumnMajor> result(z.rows, z.columns);
 
-            for (float number: vector) {
-                result.push_back(1.0f/(1.0f + std::exp(-number)));
+            for (float number: z.data) {
+                result.data.push_back(1.0f/(1.0f + std::exp(-number)));
             }
 
             return result;
         }
 
-        std::vector<float> derivative(const std::vector<float>& vector) const override{
-            std::vector<float> result;
-            result.reserve(vector.size());
+        Matrix<Layout::ColumnMajor> derivative(const Matrix<Layout::ColumnMajor>& z) const override{
+            Matrix<Layout::ColumnMajor> result(z.rows, z.columns);
 
-            for (float number: vector) {
-                result.push_back(number * (1 - number));
+            for (float number: z.data) {
+                result.data.push_back(number * (1 - number));
             }
 
             return result;

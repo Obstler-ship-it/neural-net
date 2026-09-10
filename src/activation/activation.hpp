@@ -1,10 +1,13 @@
 #pragma once
 
-#include <vector>
+#include "../matrix/matrix.hpp"
 
+/*
+ * Nichtlineare Aktivierungsfunktion
+ */
 class ActivationFunction {
 public:
-    virtual std::vector<float> activate(const std::vector<float>& vector) const = 0;
-    virtual std::vector<float> derivative(const std::vector<float>& vector) const = 0;
+    virtual Matrix<Layout::ColumnMajor> activate(const Matrix<Layout::ColumnMajor>& z) const = 0;
+    virtual Matrix<Layout::ColumnMajor> derivative(const Matrix<Layout::ColumnMajor>& z) const = 0;
     virtual ~ActivationFunction() = default;
 };

@@ -5,26 +5,24 @@
 
 class ReLu: public ActivationFunction {
     public:
-        std::vector<float> activate(const std::vector<float>& vector) const override{
-            std::vector<float> result;
-            result.reserve(vector.size());
+        Matrix<Layout::ColumnMajor> activate(const Matrix<Layout::ColumnMajor>& z) const override{
+            Matrix<Layout::ColumnMajor> result(z.rows, z.columns);
 
-            for (float number: vector) {
-                result.push_back(std::max(0.0f, number));
+            for (float number: z.data) {
+                result.data.push_back(std::max(0.0f, number));
             }
 
             return result;
         }
 
-        std::vector<float> derivative(const std::vector<float>& vector) const override{
-            std::vector<float> result;
-            result.reserve(vector.size());
+        Matrix<Layout::ColumnMajor> derivative(const Matrix<Layout::ColumnMajor>& z) const override{
+            Matrix<Layout::ColumnMajor> result(z.rows, z.columns);
 
-            for (float number: vector) {
+            for (float number: z.data) {
                 if (number > 0)
-                    result.push_back(1);
+                    result.data.push_back(1);
                 else
-                    result.push_back(0);
+                    result.data.push_back(0);
             }
 
             return result;

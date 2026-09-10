@@ -10,6 +10,8 @@ add_executable(MNIST
     main.cpp
     src/mnist_reader/reader.cpp
     src/mnist_reader/reader.hpp
+    src/matrix/matrix.hpp
+    src/matrix/matrix.cpp
 )
 
 target_include_directories(MNIST PRIVATE
