@@ -4,6 +4,11 @@
 #include <sys/types.h>
 #include <vector>
 
+enum class Initialization {
+    Zero,
+    Uninitialized,
+    Random
+};
 
 enum class Layout {
     RowMajor,
@@ -26,7 +31,7 @@ class Matrix {
 
         // benötigt Reihen und Spalten Anzahl
         // zero = true macht resize sonst reserve
-        Matrix(size_t rows, size_t columns, bool zero=false);
+        Matrix(size_t rows, size_t columns, Initialization typ);
 
         // ermöglicht Zugriff über ()
         inline float& operator()(size_t row, size_t column);

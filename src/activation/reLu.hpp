@@ -1,12 +1,13 @@
 #pragma once
 
 #include "activation.hpp"
+#include "matrix/matrix.hpp"
 #include <vector>
 
 class ReLu: public ActivationFunction {
     public:
         Matrix<Layout::ColumnMajor> activate(const Matrix<Layout::ColumnMajor>& z) const override{
-            Matrix<Layout::ColumnMajor> result(z.rows, z.columns);
+            Matrix<Layout::ColumnMajor> result(z.rows, z.columns, Initialization::Uninitialized);
 
             for (float number: z.data) {
                 result.data.push_back(std::max(0.0f, number));
@@ -16,7 +17,7 @@ class ReLu: public ActivationFunction {
         }
 
         Matrix<Layout::ColumnMajor> derivative(const Matrix<Layout::ColumnMajor>& z) const override{
-            Matrix<Layout::ColumnMajor> result(z.rows, z.columns);
+            Matrix<Layout::ColumnMajor> result(z.rows, z.columns, Initialization::Uninitialized);
 
             for (float number: z.data) {
                 if (number > 0)

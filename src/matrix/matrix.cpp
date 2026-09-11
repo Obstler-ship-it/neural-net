@@ -4,6 +4,18 @@
 #include <sys/types.h>
 #include <stdexcept>
 #include <vector>
+#include <random>
+
+
+inline std::mt19937& random_generator() {
+    static std::mt19937 generator{42}; // per Hand gesetzt nicht vergessen!!
+    return generator;
+}
+
+inline float random_float() {
+    static std::uniform_real_distribution<float> distribution{-1.0f, 1.0f};
+    return distribution(random_generator());
+}
 
 template<>
 inline float Matrix<Layout::ColumnMajor>::operator()(size_t row, size_t column) const{
@@ -26,12 +38,20 @@ inline float& Matrix<Layout::RowMajor>::operator()(size_t row, size_t column) {
 }
 
 template<Layout L>
-Matrix<L>::Matrix(size_t rows, size_t columns, bool zero)
+Matrix<L>::Matrix(size_t rows, size_t columns, Initialization typ)
     : rows(rows), columns(columns) {
-        if (zero)
+        if (typ == Initialization::Zero)
             data.resize(rows * columns);
-        else
+        else if (typ == Initialization::Uninitialized)
             data.reserve(rows * columns);
+        else if (typ == Initialization::Random) {
+            data.reserve(rows * columns);
+
+            for (size_t i = 0; i < rows * columns; ++i) {
+                data.push_back(random_float());
+            }
+        }
+
     }
 
 template<Layout L>
@@ -53,7 +73,7 @@ Matrix<Layout::ColumnMajor> Matrix<Layout::RowMajor>::operator*(const Matrix<Lay
     if (columns != other.rows)
         throw std::invalid_argument("Matrizen haben inkompatible Dimensionen");
 
-    Matrix<Layout::ColumnMajor> result(this->rows, other.columns, true);
+    Matrix<Layout::ColumnMajor> result(this->rows, other.columns, Initialization::Zero);
 
     for (size_t i=0; i < rows; i++) {
         for (size_t j=0; j < other.columns; j++) {
