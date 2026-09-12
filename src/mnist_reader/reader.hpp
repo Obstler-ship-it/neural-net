@@ -1,3 +1,4 @@
+// Reader zum einlesen des MNIST Datensatzes
 #include <vector>
 #include <array>
 #include <utility>

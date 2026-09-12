@@ -1,10 +1,11 @@
+// interface der loss_functions des NNs
 #pragma once
 
-#include <vector>
+#include "../matrix/matrix.hpp"
 
 class LossFunction{
     public:
-        virtual float loss(const std::vector<float>& vector) const = 0;
-        virtual std::vector<float> derivative(const std::vector<float>& vector) const = 0;
+        virtual Matrix<Layout::ColumnMajor> loss(const Matrix<Layout::ColumnMajor>& z) const = 0;
+        virtual Matrix<Layout::ColumnMajor> derivative(const Matrix<Layout::ColumnMajor>& z) const = 0;
         virtual ~LossFunction() = default;
 }

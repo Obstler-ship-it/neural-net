@@ -1,3 +1,4 @@
+// interface der nicht linearen activation functions
 #pragma once
 
 #include "../matrix/matrix.hpp"

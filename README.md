@@ -1,0 +1,2 @@
+- Schöne Print Ausgabe noch ergänzen
+- Vielleicht Data direkt über einen Link aus Kaggle laden

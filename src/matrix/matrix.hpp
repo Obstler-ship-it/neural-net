@@ -1,3 +1,4 @@
+// Matrix Klasse zum speichern von Gewichten, Zwischenergebnissen und Ableitungen
 #pragma once
 
 #include <cstddef>
@@ -14,6 +15,9 @@ enum class Layout {
     RowMajor,
     ColumnMajor
 };
+
+template<Layout L>
+struct TransposeExpr;
 
 /** Selbstgebauter Matrix Typ
  *
@@ -32,6 +36,7 @@ class Matrix {
         // benötigt Reihen und Spalten Anzahl
         // zero = true macht resize sonst reserve
         Matrix(size_t rows, size_t columns, Initialization typ);
+        Matrix(const std::vector<float>&& data, size_t rows, size_t columns);
 
         // ermöglicht Zugriff über ()
         inline float& operator()(size_t row, size_t column);
@@ -45,4 +50,10 @@ class Matrix {
 
         // Multiplikation zweier Matrizen
         Matrix<Layout::ColumnMajor> operator*(const Matrix<Layout::ColumnMajor>& Other);
+
+        // Ist nur ein View für '.T() *' transpose_multiply(A, B)
+        TransposeExpr<L> T() const;
 };
+
+template<Layout L>
+Matrix<Layout::ColumnMajor> operator*(const TransposeExpr<L>& A, const Matrix<Layout::RowMajor>& B);
