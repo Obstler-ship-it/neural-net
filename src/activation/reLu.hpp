@@ -1,14 +1,15 @@
 #pragma once
 
 #include "activation.hpp"
-#include "matrix/matrix.hpp"
+#include "../matrix/matrix.hpp"
+#include <algorithm>
 #include <vector>
 
 class ReLu: public ActivationFunction {
     public:
         Matrix<Layout::ColumnMajor> activate(const Matrix<Layout::ColumnMajor>& z) const override{
             Matrix<Layout::ColumnMajor> result(z.rows, z.columns, Initialization::Uninitialized);
-
+            //result.data.clear()
             for (float number: z.data) {
                 result.data.push_back(std::max(0.0f, number));
             }

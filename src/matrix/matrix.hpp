@@ -36,11 +36,11 @@ class Matrix {
         // benötigt Reihen und Spalten Anzahl
         // zero = true macht resize sonst reserve
         Matrix(size_t rows, size_t columns, Initialization typ);
-        Matrix(const std::vector<float>&& data, size_t rows, size_t columns);
+        Matrix(std::vector<float>&& data, size_t rows, size_t columns);
 
         // ermöglicht Zugriff über ()
-        inline float& operator()(size_t row, size_t column);
-        inline float operator()(size_t row, size_t column) const;
+        float& operator()(size_t row, size_t column);
+        float operator()(size_t row, size_t column) const;
 
         // vielleicht brauch ich es mal
         void resize(size_t row, size_t column);
@@ -53,7 +53,35 @@ class Matrix {
 
         // Ist nur ein View für '.T() *' transpose_multiply(A, B)
         TransposeExpr<L> T() const;
+
+        // einfachrer Print
+        void print() const;
 };
 
 template<Layout L>
-Matrix<Layout::ColumnMajor> operator*(const TransposeExpr<L>& A, const Matrix<Layout::RowMajor>& B);
+struct TransposeExpr {
+    const Matrix<L>& ref;
+
+    inline size_t rows() const {
+        return ref.columns;
+    }
+
+    inline size_t columns() const {
+        return ref.rows;
+    }
+
+    inline float operator()(size_t row, size_t column) const {
+        return ref(column, row);
+    }
+};
+
+template<Layout L>
+inline TransposeExpr<L> Matrix<L>::T() const {
+    return TransposeExpr<L>{*this};
+}
+
+template<Layout L>
+Matrix<Layout::ColumnMajor> operator*(const TransposeExpr<L>& A, const Matrix<Layout::ColumnMajor>& B);
+
+template<Layout L>
+Matrix<Layout::ColumnMajor> operator*(const Matrix<Layout::ColumnMajor>& A, const TransposeExpr<L>& B);

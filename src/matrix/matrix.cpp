@@ -5,6 +5,8 @@
 #include <stdexcept>
 #include <vector>
 #include <random>
+#include <iostream>
+#include <iomanip>
 
 
 inline std::mt19937& random_generator() {
@@ -15,20 +17,6 @@ inline std::mt19937& random_generator() {
 inline float random_float() {
     static std::uniform_real_distribution<float> distribution{-1.0f, 1.0f};
     return distribution(random_generator());
-}
-
-template<Layout L>
-struct TransposeExpr{
-    const Matrix<L>& ref;
-
-    size_t rows() const {
-        return ref.columns;
-    }
-};
-
-template<Layout L>
-TransposeExpr<L> Matrix<L>::T() const {
-    return TransposeExpr{*this};
 }
 
 template<Layout L>
@@ -49,7 +37,7 @@ Matrix<L>::Matrix(size_t rows, size_t columns, Initialization typ)
     }
 
 template<Layout L>
-Matrix<L>::Matrix(const std::vector<float>&& data, size_t rows, size_t columns)
+Matrix<L>::Matrix(std::vector<float>&& data, size_t rows, size_t columns)
     : data(std::move(data)), rows(rows), columns(columns) {}
 
 template<>
@@ -108,13 +96,54 @@ template<Layout L>
 Matrix<Layout::ColumnMajor> operator*(const TransposeExpr<L>& A, const Matrix<Layout::ColumnMajor>& B){
     Matrix<Layout::ColumnMajor> C (A.rows(), B.columns, Initialization::Zero);
 
+    if (A.columns() != B.rows)
+        throw std::invalid_argument("Matrizen haben inkompatible Dimensionen");
+
     for (size_t i=0; i < B.columns; i++){
         for (size_t j=0; j < B.rows; j++){
             for (size_t k=0; k < A.rows(); k++){
-                C(k,i) += A.ref(j,k) * B(j,i);
+                C(k,i) += A(k,j) * B(j,i);
             }
         }
-
     }
+
     return C;
+}
+
+template<Layout L>
+Matrix<Layout::ColumnMajor> operator*(const Matrix<Layout::ColumnMajor>& A, const TransposeExpr<L>& B){
+    Matrix<Layout::ColumnMajor> C (A.rows, B.columns(), Initialization::Zero);
+
+    if (A.columns != B.rows())
+        throw std::invalid_argument("Matrizen haben inkompatible Dimensionen");
+
+    for (size_t i=0; i < B.rows(); i++){
+        for (size_t j=0; j < A.columns; j++){
+            for (size_t k=0; k < A.rows; k++){
+                C(k,i) += A(k,j) * B(j,i);
+            }
+        }
+    }
+
+    return C;
+}
+
+template<Layout L>
+void Matrix<L>::print() const {
+    std::cout << "[\n";
+
+    for (size_t i = 0; i < rows; ++i) {
+        std::cout << "  [ ";
+
+        for (size_t j = 0; j < columns; ++j) {
+            std::cout << std::setw(9)
+                      << std::fixed
+                      << std::setprecision(4)
+                      << (*this)(i, j);
+        }
+
+        std::cout << " ]\n";
+    }
+
+    std::cout << "]\n";
 }
