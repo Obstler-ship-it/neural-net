@@ -2,7 +2,7 @@
 
 #include "activation.hpp"
 #include "activation.hpp"
-#include "matrix/matrix.hpp"
+#include "../matrix/matrix.hpp"
 #include <cmath>
 #include <vector>
 

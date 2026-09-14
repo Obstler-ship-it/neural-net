@@ -2,19 +2,54 @@
 
 #include "../matrix/matrix.hpp"
 #include <cmath>
+#include <cstddef>
+#include <vector>
 
-//TODO
+class softmax{
+    public:
+        // Forward für Softmax
+        void forward(Matrix<Layout::ColumnMajor>& z);
 
-inline void softmax(Matrix<Layout::ColumnMajor> z){
-    float sum = 0.0f;
+        // Multiplikation nach der Kettenregel mit der entsprechenden Ableitung
+        Matrix<Layout::ColumnMajor>& backward(Matrix<Layout::ColumnMajor>& dL, const std::vector<int> y, const Matrix<Layout::ColumnMajor>& y_hat);
+};
 
-    for(float number: z.data){
-        sum += std::exp(number);
+
+inline void softmax::forward(Matrix<Layout::ColumnMajor>& z){
+
+    for (size_t i=0; i < z.columns; i++){
+        float max_value = z(0, i);
+
+        for (std::size_t j=0; j < z.rows; j++) {
+            max_value = std::max(max_value, z(j,i));
+        }
+
+        float sum = 0.0f;
+
+        for(size_t j=0; j < z.rows; j++){
+            z(j,i) = std::exp(z(j,i) - max_value);
+            sum += z(j,i);
+        }
+
+        for(size_t j=0; j < z.rows; j++){
+            z(j,i) = z(j,i) / sum;
+        }
     }
 
-    for(float& number: z.data){
-        number = std::exp(number) / sum;
-    }
 }
 
-inline
+inline Matrix<Layout::ColumnMajor>& softmax::backward(Matrix<Layout::ColumnMajor>& dL, const std::vector<int> y, const Matrix<Layout::ColumnMajor>& y_hat){
+
+    for (size_t i=0; i < dL.columns; i++){
+        for (size_t j=0; j < dL.rows; j++){
+
+            if (j == y[i])
+                dL(j,i) *= (1-y_hat(j,i));
+            else
+                dL(j,i) *= -y_hat(j,i);
+
+        }
+    }
+
+    return dL;
+}

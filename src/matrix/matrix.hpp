@@ -80,8 +80,12 @@ inline TransposeExpr<L> Matrix<L>::T() const {
     return TransposeExpr<L>{*this};
 }
 
+// Für RowMajor x ColumnMajor SIMD optimiert,
+// funktioniert aber auch für ColumnMajor x ColumnMajor
 template<Layout L>
 Matrix<Layout::ColumnMajor> operator*(const TransposeExpr<L>& A, const Matrix<Layout::ColumnMajor>& B);
 
+// Für ColumnMajor x ColumnMajor SIMD optimiert,
+// funktioniert aber auch für ColumnMajor x RowMajor
 template<Layout L>
 Matrix<Layout::ColumnMajor> operator*(const Matrix<Layout::ColumnMajor>& A, const TransposeExpr<L>& B);
