@@ -2,5 +2,6 @@ data/
 build/
 .cache/
 .vscode/
+compile_commands.json
 *.o
 *.out
