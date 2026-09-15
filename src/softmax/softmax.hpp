@@ -44,9 +44,9 @@ inline Matrix<Layout::ColumnMajor>& softmax::backward(Matrix<Layout::ColumnMajor
         for (size_t j=0; j < dL.rows; j++){
 
             if (j == y[i])
-                dL(j,i) *= (1-y_hat(j,i));
+                dL(j,i) *= y_hat(y[i],i) * (1-y_hat(j,i));
             else
-                dL(j,i) *= -y_hat(j,i);
+                dL(j,i) *= -y_hat(y[i],i) * y_hat(j,i);
 
         }
     }

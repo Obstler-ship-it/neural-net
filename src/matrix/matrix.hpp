@@ -34,7 +34,7 @@ class Matrix {
         size_t columns;
 
         // benötigt Reihen und Spalten Anzahl
-        // zero = true macht resize sonst reserve
+        // Unitialazation = reserve, Zero = resize, Random = random()
         Matrix(size_t rows, size_t columns, Initialization typ);
         Matrix(std::vector<float>&& data, size_t rows, size_t columns);
 

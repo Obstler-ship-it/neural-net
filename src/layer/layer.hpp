@@ -1,17 +1,25 @@
 #pragma once
 
+#include "../matrix/matrix.hpp"
 #include <cstddef>
-#include <vector>
-
+#include <sys/types.h>
 
 class Layer{
     public:
-    Layer(std::size_t rows, std::size_t columns);
-    float& operator() (int row, int column);
-    std::vector<float> dot(const std::vector<float>);
+        Layer(size_t input_size, size_t output_size, uint batch_size)
+        : input_size(input_size),
+          output_size(output_size),
+          W(output_size, input_size, Initialization::Random),
+          a(input_size, batch_size, Initialization::Uninitialized),
+          b(output_size, 0, Initialization::Random){}
 
-    private:
-    std::vector<float> layer;
-    std::size_t rows = 0;
-    std::size_t columns = 0;
+        size_t input_size;
+        size_t output_size;
+        uint batch_size;
+
+        Matrix<Layout::RowMajor> W;
+        Matrix<Layout::ColumnMajor> a;
+        Matrix<Layout::ColumnMajor> b;
+
+        void forward();
 };

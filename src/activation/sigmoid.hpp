@@ -8,7 +8,7 @@
 
 class Sigmoid: public ActivationFunction {
     public:
-        Matrix<Layout::ColumnMajor> activate(const Matrix<Layout::ColumnMajor>& z) const override {
+        Matrix<Layout::ColumnMajor> foward(const Matrix<Layout::ColumnMajor>& z) const override {
             Matrix<Layout::ColumnMajor> result(z.rows, z.columns, Initialization::Uninitialized);
 
             for (float number: z.data) {
@@ -18,7 +18,7 @@ class Sigmoid: public ActivationFunction {
             return result;
         }
 
-        Matrix<Layout::ColumnMajor> derivative(const Matrix<Layout::ColumnMajor>& z) const override{
+        Matrix<Layout::ColumnMajor> backward(const Matrix<Layout::ColumnMajor>& z) const override{
             Matrix<Layout::ColumnMajor> result(z.rows, z.columns, Initialization::Uninitialized);
 
             for (float number: z.data) {
