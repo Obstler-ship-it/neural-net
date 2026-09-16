@@ -49,10 +49,14 @@ class Matrix {
         void operator*(float number);
 
         // Multiplikation zweier Matrizen
-        Matrix<Layout::ColumnMajor> operator*(const Matrix<Layout::ColumnMajor>& Other);
+        Matrix<Layout::ColumnMajor> operator*(const Matrix<Layout::ColumnMajor>& other);
 
         // Ist nur ein View für '.T() *' transpose_multiply(A, B)
         TransposeExpr<L> T() const;
+
+        // Addition zweier beliebiger Matrizen
+        template<Layout OtherLayout>
+        Matrix<L>& operator+=(const Matrix<OtherLayout>& other);
 
         // einfachrer Print
         void print() const;

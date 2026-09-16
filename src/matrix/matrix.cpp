@@ -128,6 +128,38 @@ Matrix<Layout::ColumnMajor> operator*(const Matrix<Layout::ColumnMajor>& A, cons
     return C;
 }
 
+template<>
+template<Layout OtherLayout>
+Matrix<Layout::ColumnMajor>& Matrix<Layout::ColumnMajor>::operator+=(const Matrix<OtherLayout>& other){
+
+    if (other.data.size() < 1)
+        throw std::invalid_argument("Matrix ist leer");
+
+    for (size_t i=0; i < this->columns; i++){
+        for (size_t j=0; j < this->rows; j++){
+            (*this)(j,i) += other(j % other.rows,i % other.columns);
+        }
+    }
+
+    return *this;
+}
+
+template<>
+template<Layout OtherLayout>
+Matrix<Layout::RowMajor>& Matrix<Layout::RowMajor>::operator+=(const Matrix<OtherLayout>& other){
+
+    if (other.data.size() < 1)
+        throw std::invalid_argument("Matrix ist leer");
+
+    for (size_t i=0; i < this->rows; i++){
+        for (size_t j=0; j < this->columns; j++){
+            (*this)(i,j) += other(i % other.rows,j % other.columns);
+        }
+    }
+
+    return *this;
+}
+
 template<Layout L>
 void Matrix<L>::print() const {
     std::cout << "[\n";
