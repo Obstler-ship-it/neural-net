@@ -7,7 +7,7 @@
 
 class MeanSquareError:public LossFunction{
     public:
-        float forward(const Matrix<Layout::ColumnMajor>& y_hat, const std::vector<int>& y){
+        float forward(const Matrix<Layout::ColumnMajor>& y_hat, const std::vector<int>& y) const override{
             float sum = 0;
 
             for (size_t i=0; i < y_hat.columns; i++){
@@ -17,7 +17,7 @@ class MeanSquareError:public LossFunction{
             return sum;
         }
 
-        float derivative(float y_hat){
+        float derivative(float y_hat) const override{
             return (y_hat - 1);
         }
 };

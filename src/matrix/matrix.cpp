@@ -68,9 +68,10 @@ void Matrix<L>::resize(size_t row, size_t column){
 }
 
 template<Layout L>
-void Matrix<L>::operator*(float number){
+Matrix<L>& Matrix<L>::operator*(float number){
     for (auto& x: data)
         x *= number;
+    return *this;
 }
 
 template<>
@@ -158,6 +159,56 @@ Matrix<Layout::RowMajor>& Matrix<Layout::RowMajor>::operator+=(const Matrix<Othe
     }
 
     return *this;
+}
+
+template<>
+template<Layout OtherLayout>
+Matrix<Layout::ColumnMajor>& Matrix<Layout::ColumnMajor>::operator-=(const Matrix<OtherLayout>& other){
+
+    if (other.data.size() < 1)
+        throw std::invalid_argument("Matrix ist leer");
+
+    for (size_t i=0; i < this->columns; i++){
+        for (size_t j=0; j < this->rows; j++){
+            (*this)(j,i) -= other(j % other.rows,i % other.columns);
+        }
+    }
+
+    return *this;
+}
+
+template<>
+template<Layout OtherLayout>
+Matrix<Layout::RowMajor>& Matrix<Layout::RowMajor>::operator-=(const Matrix<OtherLayout>& other){
+
+    if (other.data.size() < 1)
+        throw std::invalid_argument("Matrix ist leer");
+
+    for (size_t i=0; i < this->rows; i++){
+        for (size_t j=0; j < this->columns; j++){
+            (*this)(i,j) -= other(i % other.rows,j % other.columns);
+        }
+    }
+
+    return *this;
+}
+
+template<Layout L>
+Matrix<L> Matrix<L>::sum_across_columns(){
+
+    if (data.size() < 1)
+        throw std::logic_error("Matrix ist leer!!");
+
+    Matrix<L> result(this->rows, 1, Initialization::Uninitialized);
+    for (size_t i=0; i < this->rows; i++){
+        float sum = 0;
+        for (size_t j=0; j < this->columns; j++){
+            sum += (*this)(i,j);
+        }
+        result.data.push_back(sum);
+    }
+
+    return result;
 }
 
 template<Layout L>

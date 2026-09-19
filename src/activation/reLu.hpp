@@ -3,30 +3,29 @@
 #include "activation.hpp"
 #include "../matrix/matrix.hpp"
 #include <algorithm>
+#include <cstddef>
+#include <stdexcept>
 #include <vector>
 
 class ReLu: public ActivationFunction {
     public:
-        Matrix<Layout::ColumnMajor> foward(const Matrix<Layout::ColumnMajor>& z) const override{
-            Matrix<Layout::ColumnMajor> result(z.rows, z.columns, Initialization::Uninitialized);
-            //result.data.clear()
-            for (float number: z.data) {
-                result.data.push_back(std::max(0.0f, number));
+        void forward(Matrix<Layout::ColumnMajor>& z) const override{
+
+            for (float& number: z.data) {
+                number = std::max(0.0f, number);
             }
 
-            return result;
         }
 
-        Matrix<Layout::ColumnMajor> backward(const Matrix<Layout::ColumnMajor>& z) const override{
-            Matrix<Layout::ColumnMajor> result(z.rows, z.columns, Initialization::Uninitialized);
+        void backward(Matrix<Layout::ColumnMajor>& dL, const Matrix<Layout::ColumnMajor>& a) const override{
 
-            for (float number: z.data) {
-                if (number > 0)
-                    result.data.push_back(1);
-                else
-                    result.data.push_back(0);
+            if (dL.rows != a.rows || dL.columns != a.columns)
+                throw std::invalid_argument("Matrizen Dimensionen stimmen nicht überein!");
+
+            for (size_t i=0; i < a.data.size(); i++){
+                if (a.data[i] <= 0.0f)
+                    dL.data[i] = 0.0f;
             }
 
-            return result;
         }
 };

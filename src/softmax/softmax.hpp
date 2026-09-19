@@ -11,7 +11,7 @@ class softmax{
         void forward(Matrix<Layout::ColumnMajor>& z);
 
         // Multiplikation nach der Kettenregel mit der entsprechenden Ableitung
-        Matrix<Layout::ColumnMajor>& backward(Matrix<Layout::ColumnMajor>& dL, const std::vector<int> y, const Matrix<Layout::ColumnMajor>& y_hat);
+        Matrix<Layout::ColumnMajor> backward(Matrix<Layout::ColumnMajor>& dL, const std::vector<int> y, const Matrix<Layout::ColumnMajor>& y_hat);
 };
 
 
@@ -38,18 +38,16 @@ inline void softmax::forward(Matrix<Layout::ColumnMajor>& z){
 
 }
 
-inline Matrix<Layout::ColumnMajor>& softmax::backward(Matrix<Layout::ColumnMajor>& dL, const std::vector<int> y, const Matrix<Layout::ColumnMajor>& y_hat){
+inline Matrix<Layout::ColumnMajor> softmax::backward(Matrix<Layout::ColumnMajor>& dL, const std::vector<int> y, const Matrix<Layout::ColumnMajor>& y_hat){
 
-    for (size_t i=0; i < dL.columns; i++){
-        for (size_t j=0; j < dL.rows; j++){
+    Matrix<Layout::ColumnMajor> dz(y_hat.rows, y_hat.columns, Initialization::Zero);
 
-            if (j == y[i])
-                dL(j,i) *= y_hat(y[i],i) * (1-y_hat(j,i));
-            else
-                dL(j,i) *= -y_hat(y[i],i) * y_hat(j,i);
-
+    for (size_t i=0; i < dz.columns; i++){
+        for (size_t j=0; j < dz.rows; j++){
+            dz(j,i) = dL(0,i) * -y_hat(j,i) * y_hat(y[i],i);
         }
+        dz(y[i], i) = dL(0, i) * y_hat(y[i],i) * (1-y_hat(y[i],i));
     }
 
-    return dL;
+    return dz;
 }

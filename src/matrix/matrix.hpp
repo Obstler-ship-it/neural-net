@@ -46,7 +46,7 @@ class Matrix {
         void resize(size_t row, size_t column);
 
         // Skalarmultiplikation
-        void operator*(float number);
+        Matrix<L>& operator*(float number);
 
         // Multiplikation zweier Matrizen
         Matrix<Layout::ColumnMajor> operator*(const Matrix<Layout::ColumnMajor>& other);
@@ -57,6 +57,13 @@ class Matrix {
         // Addition zweier beliebiger Matrizen
         template<Layout OtherLayout>
         Matrix<L>& operator+=(const Matrix<OtherLayout>& other);
+
+        // Subtraktion zweier beliebiger Matrizen
+        template<Layout OtherLayout>
+        Matrix<L>& operator-=(const Matrix<OtherLayout>& other);
+
+        // Summiert entlang der Spalten
+        Matrix<L> sum_across_columns();
 
         // einfachrer Print
         void print() const;

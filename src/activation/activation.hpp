@@ -8,7 +8,7 @@
  */
 class ActivationFunction {
 public:
-    virtual Matrix<Layout::ColumnMajor> foward(const Matrix<Layout::ColumnMajor>& z) const = 0;
-    virtual Matrix<Layout::ColumnMajor> backward(const Matrix<Layout::ColumnMajor>& z) const = 0;
+    virtual void forward(Matrix<Layout::ColumnMajor>& z) const = 0;
+    virtual void backward(Matrix<Layout::ColumnMajor>& dL, const Matrix<Layout::ColumnMajor>& a) const = 0;
     virtual ~ActivationFunction() = default;
 };

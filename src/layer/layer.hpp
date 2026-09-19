@@ -2,6 +2,7 @@
 #pragma once
 
 #include "../matrix/matrix.hpp"
+#include "../activation/activation.hpp"
 #include <cstddef>
 #include <sys/types.h>
 
@@ -12,12 +13,12 @@ class Layer{
           output_size(output_size),
           W(output_size, input_size, Initialization::Random),
           a(input_size, batch_size, Initialization::Uninitialized),
-          b(output_size, 0, Initialization::Random),
+          b(output_size, 1, Initialization::Random),
           dW(output_size, input_size, Initialization::Zero) {}
 
         size_t input_size;
         size_t output_size;
-        uint batch_size;
+        size_t batch_size;
 
         Matrix<Layout::RowMajor> W;
         Matrix<Layout::ColumnMajor> a;
@@ -25,6 +26,9 @@ class Layer{
 
         Matrix<Layout::ColumnMajor> dW;
 
-        void forward(const Matrix<Layout::ColumnMajor>& activation);
-        void backward(const Matrix<Layout::ColumnMajor>& dL);
+        // Berechnet die vorherige Layer weiter
+        void forward(const Matrix<Layout::ColumnMajor>& activation, const ActivationFunction& activation_function);
+
+        // Berechnet die nächste Ableitung und aktualisiert die Gewichte
+        Matrix<Layout::ColumnMajor> backward(Matrix<Layout::ColumnMajor>& dL, const ActivationFunction& activation_function, const Matrix<Layout::ColumnMajor>& a_prev,float learning_rate);
 };

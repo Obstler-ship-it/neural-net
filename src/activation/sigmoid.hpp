@@ -3,27 +3,26 @@
 #include "activation.hpp"
 #include "../matrix/matrix.hpp"
 #include <cmath>
+#include <stdexcept>
 #include <vector>
 
 class Sigmoid: public ActivationFunction {
     public:
-        Matrix<Layout::ColumnMajor> foward(const Matrix<Layout::ColumnMajor>& z) const override {
-            Matrix<Layout::ColumnMajor> result(z.rows, z.columns, Initialization::Uninitialized);
+        void forward(Matrix<Layout::ColumnMajor>& z) const override {
 
-            for (float number: z.data) {
-                result.data.push_back(1.0f/(1.0f + std::exp(-number)));
+            for (float& number: z.data) {
+                number = (1.0f/(1.0f + std::exp(-number)));
             }
 
-            return result;
         }
 
-        Matrix<Layout::ColumnMajor> backward(const Matrix<Layout::ColumnMajor>& z) const override{
-            Matrix<Layout::ColumnMajor> result(z.rows, z.columns, Initialization::Uninitialized);
+        void backward(Matrix<Layout::ColumnMajor>& dL, const Matrix<Layout::ColumnMajor>& a) const override{
 
-            for (float number: z.data) {
-                result.data.push_back(number * (1 - number));
+            if (dL.rows != a.rows || dL.columns != a.columns)
+                throw std::invalid_argument("Matrizen Dimensionen stimmen nicht überein!");
+
+            for (size_t i=0; i < a.data.size(); i++){
+                dL.data[i] *= a.data[i] * (1.0f - a.data[i]);
             }
-
-            return result;
         }
 };
