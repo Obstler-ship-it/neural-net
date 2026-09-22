@@ -5,10 +5,11 @@
 #include <fstream>
 #include <stdexcept>
 #include <string>
+#include <vector>
 
 namespace {
 
-using Images = std::vector<std::array<double, 784>>;
+using Images = std::vector<std::vector<float>>;
 
 std::uint32_t read_u32_big_endian(std::ifstream& file) {
     std::uint8_t bytes[4];
@@ -54,7 +55,7 @@ std::pair<Images, std::vector<int>> load_dataset(
     std::vector<int> labels(label_count);
 
     for (auto& image : images) {
-        for (double& pixel : image) {
+        for (float& pixel : image) {
             std::uint8_t value;
             image_file.read(reinterpret_cast<char*>(&value), sizeof(value));
 
@@ -62,7 +63,7 @@ std::pair<Images, std::vector<int>> load_dataset(
                 throw std::runtime_error("Could not read MNIST image data");
             }
 
-            pixel = static_cast<double>(value) / 255.0;
+            pixel = static_cast<float>(value) / 255.0f;
         }
     }
 
@@ -82,13 +83,13 @@ std::pair<Images, std::vector<int>> load_dataset(
 
 } // namespace
 
-std::pair<std::vector<std::array<double, 784>>, std::vector<int>> get_training_data() {
+std::pair<std::vector<std::vector<float>>, std::vector<int>> get_training_data() {
     return load_dataset(
         "data/train-images.idx3-ubyte",
         "data/train-labels.idx1-ubyte");
 }
 
-std::pair<std::vector<std::array<double, 784>>, std::vector<int>> get_test_data() {
+std::pair<std::vector<std::vector<float>>, std::vector<int>> get_test_data() {
     return load_dataset(
         "data/t10k-images.idx3-ubyte",
         "data/t10k-labels.idx1-ubyte");

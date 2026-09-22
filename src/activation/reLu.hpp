@@ -7,7 +7,7 @@
 #include <stdexcept>
 #include <vector>
 
-class ReLu: public ActivationFunction {
+class ReLU: public ActivationFunction {
     public:
         void forward(Matrix<Layout::ColumnMajor>& z) const override{
 

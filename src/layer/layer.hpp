@@ -26,9 +26,15 @@ class Layer{
 
         Matrix<Layout::ColumnMajor> dW;
 
-        // Berechnet die vorherige Layer weiter
+        // Berechnet die Layer weiter mit Aktivierungsfunktion
         void forward(const Matrix<Layout::ColumnMajor>& activation, const ActivationFunction& activation_function);
 
-        // Berechnet die nächste Ableitung und aktualisiert die Gewichte
+        // Berechnet die Layer ohne Aktivierungsfunktion
+        void forward(const Matrix<Layout::ColumnMajor>& activation);
+
+        // Berechnet die nächste Ableitung und aktualisiert die Gewichte mit Aktivierungsfunktion
         Matrix<Layout::ColumnMajor> backward(Matrix<Layout::ColumnMajor>& dL, const ActivationFunction& activation_function, const Matrix<Layout::ColumnMajor>& a_prev,float learning_rate);
+
+        // Berechnet die nächste Ableitung und aktualisiert die Gewichte ohne Aktivierungsfunktion
+        Matrix<Layout::ColumnMajor> backward(Matrix<Layout::ColumnMajor>& dL, const Matrix<Layout::ColumnMajor>& a_prev,float learning_rate);
 };

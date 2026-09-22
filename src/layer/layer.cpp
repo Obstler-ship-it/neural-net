@@ -15,8 +15,27 @@ void Layer::forward(const Matrix<Layout::ColumnMajor>& activation, const Activat
    activation_function.forward(a);
 }
 
+void Layer::forward(const Matrix<Layout::ColumnMajor>& activation){
+
+    if (W.columns != activation.rows)
+        throw std::invalid_argument("Anzahl Gewichte und Koeffizienten stimmt nicht");
+
+    a = W * activation;
+    a += b;
+}
+
 Matrix<Layout::ColumnMajor> Layer::backward(Matrix<Layout::ColumnMajor>& dL, const ActivationFunction& activation_function, const Matrix<Layout::ColumnMajor>& a_prev, float learning_rate){
     activation_function.backward(dL, a); // = dL/dz
+
+    b -=  dL.sum_across_columns() * (learning_rate * 1.0f / batch_size);
+    dW = (dL * a_prev.T()) * (1.0f / batch_size);
+    Matrix<Layout::ColumnMajor> result = W.T() * dL;
+    W -= (dW * learning_rate);
+
+    return result;
+}
+
+Matrix<Layout::ColumnMajor> Layer::backward(Matrix<Layout::ColumnMajor>& dL, const Matrix<Layout::ColumnMajor>& a_prev, float learning_rate){
 
     b -=  dL.sum_across_columns() * (learning_rate * 1.0f / batch_size);
     dW = (dL * a_prev.T()) * (1.0f / batch_size);

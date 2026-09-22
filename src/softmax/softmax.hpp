@@ -5,13 +5,13 @@
 #include <cstddef>
 #include <vector>
 
-class softmax{
-    public:
-        // Forward für Softmax
-        void forward(Matrix<Layout::ColumnMajor>& z);
+namespace softmax{
 
-        // Multiplikation nach der Kettenregel mit der entsprechenden Ableitung
-        Matrix<Layout::ColumnMajor> backward(Matrix<Layout::ColumnMajor>& dL, const std::vector<int> y, const Matrix<Layout::ColumnMajor>& y_hat);
+    // Forward für Softmax
+    void forward(Matrix<Layout::ColumnMajor>& z);
+
+    // Multiplikation nach der Kettenregel mit der entsprechenden Ableitung
+    Matrix<Layout::ColumnMajor> backward(Matrix<Layout::ColumnMajor>& dL, const std::vector<int>& y, const Matrix<Layout::ColumnMajor>& y_hat);
 };
 
 
@@ -38,7 +38,7 @@ inline void softmax::forward(Matrix<Layout::ColumnMajor>& z){
 
 }
 
-inline Matrix<Layout::ColumnMajor> softmax::backward(Matrix<Layout::ColumnMajor>& dL, const std::vector<int> y, const Matrix<Layout::ColumnMajor>& y_hat){
+inline Matrix<Layout::ColumnMajor> softmax::backward(Matrix<Layout::ColumnMajor>& dL, const std::vector<int>& y, const Matrix<Layout::ColumnMajor>& y_hat){
 
     Matrix<Layout::ColumnMajor> dz(y_hat.rows, y_hat.columns, Initialization::Zero);
 
