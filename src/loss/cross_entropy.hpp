@@ -17,7 +17,7 @@ class CrossEntropy: public LossFunction{
             float loss = 0;
 
             for (size_t i=0; i< y_hat.columns; i++){
-                loss += -std::log(y_hat(y[i],i));
+                loss += -std::log(std::max(y_hat(y[i],i), 1e-7f));
             }
 
             return loss;

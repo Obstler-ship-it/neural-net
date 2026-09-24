@@ -100,3 +100,5 @@ Matrix<Layout::ColumnMajor> operator*(const TransposeExpr<L>& A, const Matrix<La
 // funktioniert aber auch für ColumnMajor x RowMajor
 template<Layout L>
 Matrix<Layout::ColumnMajor> operator*(const Matrix<Layout::ColumnMajor>& A, const TransposeExpr<L>& B);
+
+#include "matrix.tpp"

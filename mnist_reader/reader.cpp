@@ -5,6 +5,7 @@
 #include <fstream>
 #include <stdexcept>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace {
@@ -52,6 +53,9 @@ std::pair<Images, std::vector<int>> load_dataset(
     }
 
     Images images(image_count);
+    for (auto& image : images) {
+        image.resize(rows * columns);
+    }
     std::vector<int> labels(label_count);
 
     for (auto& image : images) {
@@ -85,12 +89,12 @@ std::pair<Images, std::vector<int>> load_dataset(
 
 std::pair<std::vector<std::vector<float>>, std::vector<int>> get_training_data() {
     return load_dataset(
-        "data/train-images.idx3-ubyte",
-        "data/train-labels.idx1-ubyte");
+        MNIST_DATA_DIR "/train-images.idx3-ubyte",
+        MNIST_DATA_DIR "/train-labels.idx1-ubyte");
 }
 
 std::pair<std::vector<std::vector<float>>, std::vector<int>> get_test_data() {
     return load_dataset(
-        "data/t10k-images.idx3-ubyte",
-        "data/t10k-labels.idx1-ubyte");
+        MNIST_DATA_DIR "/t10k-images.idx3-ubyte",
+        MNIST_DATA_DIR "/t10k-labels.idx1-ubyte");
 }

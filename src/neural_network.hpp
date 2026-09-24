@@ -30,6 +30,12 @@ enum class ActivationType{
     Sigmoid
 };
 
+enum class Mode{
+    train,
+    test_full,
+    test
+};
+
 class NeuralNetwork{
     public:
 
@@ -41,7 +47,7 @@ class NeuralNetwork{
             LossType loss,
             size_t batch_size=64,
             float learning_rate=0.05)
-        : number_labels(number_labels), batch_size(batch_size), learning_rate(learning_rate) {
+        : number_labels(number_labels), batch_size(batch_size), learning_rate(learning_rate), loss_type(loss) {
 
             if (learning_rate <= 0.0f)
                 throw std::invalid_argument("Learning rate must be greater than zero");
@@ -75,15 +81,18 @@ class NeuralNetwork{
         const size_t number_labels;
         const size_t batch_size;
         const float learning_rate;
+        const LossType loss_type;
+
+        bool trained = false;
 
         //trainiert das Neuronale Netz
-        void train(std::vector<std::vector<float>>, std::vector<int>);
+        void train(const std::vector<std::vector<float>>&, const std::vector<int>&);
 
         // Bestimmt den Loss auf dem Testdatensatz
-        void test(std::vector<std::vector<float>>, std::vector<int>);
+        void test(const std::vector<std::vector<float>>&, const std::vector<int>&);
 
         // Gibt den Loss vom Batch an
-        float forward_train(const Matrix<Layout::ColumnMajor>& input, const std::vector<int>& labels);
+        float forward(const Matrix<Layout::ColumnMajor>& input, const std::vector<int>& labels, Mode);
 
         // Gibt eine Printe Ausgabe für den Batch
         void forward_test();

@@ -1,5 +1,6 @@
 data/
 build/
+build-clang/
 .cache/
 .vscode/
 compile_commands.json
