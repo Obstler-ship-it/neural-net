@@ -26,5 +26,6 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     target_compile_options(MNIST PRIVATE
         $<$<CONFIG:Release>:-O3>
         $<$<CONFIG:Release>:-ffast-math>
+        $<$<CONFIG:Release>:-march=native>
     )
 endif()

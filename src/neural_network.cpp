@@ -45,7 +45,7 @@ void NeuralNetwork::backward(const Matrix<Layout::ColumnMajor>& input, const std
     for (size_t i=Layers.size() - 2; i > 0; i--){
         gradient = Layers[i].backward(gradient, *activation_, Layers[i-1].a, learning_rate);
     }
-    Layers[0].backward(gradient, *activation_, input, learning_rate);
+    Layers[0].backward(learning_rate, gradient, *activation_, input);
 }
 
 void NeuralNetwork::train(const std::vector<std::vector<float>>& data, const std::vector<int>& labels){
@@ -55,7 +55,6 @@ void NeuralNetwork::train(const std::vector<std::vector<float>>& data, const std
     if (data.empty() || batch_size == 0 || data.size() < batch_size)
         throw std::invalid_argument("Datensatz ist leer oder kleiner als ein Batch");
 
-    std::mt19937 generator{42};
     std::vector<size_t> indizes(data.size());
     std::iota(indizes.begin(), indizes.end(), 0);
     size_t rows = data[0].size();
@@ -64,7 +63,7 @@ void NeuralNetwork::train(const std::vector<std::vector<float>>& data, const std
 
     do{
         ++epoch;
-        std::shuffle(indizes.begin(), indizes.end(), generator);
+        std::shuffle(indizes.begin(), indizes.end(), random_generator());
         size_t count_loss = 0;
         float loss = 1;
         double batch_build_ms = 0.0;
@@ -128,5 +127,5 @@ void NeuralNetwork::test(const std::vector<std::vector<float>>& data, const std:
 
     const auto test_end = std::chrono::steady_clock::now();
     auto ms = std::chrono::duration<float, std::milli>(test_end - test_start).count();
-    std::println("Genauigkeit: {}% in {}ms für {} Ziffern", precision, ms, y.size());
+    std::println("Genauigkeit: {:.2f}% in {}ms für {} Ziffern", precision * 100, ms, y.size());
 }

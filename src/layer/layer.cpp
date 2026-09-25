@@ -44,3 +44,11 @@ Matrix<Layout::ColumnMajor> Layer::backward(Matrix<Layout::ColumnMajor>& dL, con
 
     return result;
 }
+
+void Layer::backward(float learning_rate, Matrix<Layout::ColumnMajor>& dL, const ActivationFunction& activation_function, const Matrix<Layout::ColumnMajor>& a_prev){
+    activation_function.backward(dL, a); // = dL/dz
+
+    b -=  dL.sum_across_columns() * (learning_rate * 1.0f / batch_size);
+    dW = (dL * a_prev.T()) * (1.0f / batch_size);
+    W -= (dW * learning_rate);
+}
