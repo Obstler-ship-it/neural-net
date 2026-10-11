@@ -14,6 +14,7 @@ inline void set_random_seed(unsigned int seed) {
     random_generator().seed(seed);
 }
 
+//random number between -1.0 und 1.0
 inline float random_float() {
     static std::uniform_real_distribution<float> distribution{-1.0f, 1.0f};
     return distribution(random_generator());

@@ -42,5 +42,6 @@ class Layer{
         // Berechnet die nächste Ableitung und aktualisiert die Gewichte ohne Aktivierungsfunktion
         Matrix<Layout::ColumnMajor> backward(Matrix<Layout::ColumnMajor>& dL, const Matrix<Layout::ColumnMajor>& a_prev,float learning_rate);
 
+        // Aktualisiert die Gewichte ohne die nächste Ableitung zu berechnen
         void backward(float learning_rate, Matrix<Layout::ColumnMajor>& dL, const ActivationFunction& activation_function, const Matrix<Layout::ColumnMajor>& a_prev);
 };
