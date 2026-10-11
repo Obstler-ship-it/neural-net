@@ -1,6 +1,6 @@
 #include "mnist_reader/reader.hpp"
 #include "src/neural_network.hpp"
-#include "src/matrix/matrix.hpp"
+
 
 int main(){
     const size_t seed = 163;
