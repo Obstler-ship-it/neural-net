@@ -69,7 +69,7 @@ void NeuralNetwork::train(const std::vector<std::vector<float>>& data, const std
         double forward_ms = 0.0;
         double backward_ms = 0.0;
 
-        for (size_t i=0; i + batch_size <= data.size() && count < 12000 * 64; i += batch_size) {
+        for (size_t i=0; i + batch_size <= data.size() && count < 8000 * 64; i += batch_size) {
 
             const auto batch_start = std::chrono::steady_clock::now();
             count += batch_size;
@@ -102,7 +102,7 @@ void NeuralNetwork::train(const std::vector<std::vector<float>>& data, const std
         std::println("Epoch {} timing [ms]: batch {:.1f}, forward {:.1f}, backward {:.1f}; digits {}, loss {:.3f}",
             epoch, batch_build_ms, forward_ms, backward_ms, batch_size * count_loss, loss/count_loss);
 
-    } while (count < 12000 * 64);
+    } while (count < 8000 * 64);
 
 }
 

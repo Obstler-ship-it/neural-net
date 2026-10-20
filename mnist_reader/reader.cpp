@@ -26,7 +26,7 @@ std::uint32_t read_u32_big_endian(std::ifstream& file) {
            static_cast<std::uint32_t>(bytes[3]);
 }
 
-std::pair<Images, std::vector<int>> load_dataset(
+MnistDataset load_dataset(
     const std::string& image_path,
     const std::string& label_path) {
     std::ifstream image_file(image_path, std::ios::binary);
@@ -82,18 +82,19 @@ std::pair<Images, std::vector<int>> load_dataset(
         label = static_cast<int>(value);
     }
 
-    return {std::move(images), std::move(labels)};
+    return {std::move(images), std::move(labels),
+            static_cast<std::size_t>(rows), static_cast<std::size_t>(columns)};
 }
 
 } // namespace
 
-std::pair<std::vector<std::vector<float>>, std::vector<int>> get_training_data() {
+MnistDataset get_training_data() {
     return load_dataset(
         MNIST_DATA_DIR "/train-images.idx3-ubyte",
         MNIST_DATA_DIR "/train-labels.idx1-ubyte");
 }
 
-std::pair<std::vector<std::vector<float>>, std::vector<int>> get_test_data() {
+MnistDataset get_test_data() {
     return load_dataset(
         MNIST_DATA_DIR "/t10k-images.idx3-ubyte",
         MNIST_DATA_DIR "/t10k-labels.idx1-ubyte");

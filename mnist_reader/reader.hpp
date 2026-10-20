@@ -1,7 +1,14 @@
 // Reader zum einlesen des MNIST Datensatzes
+#include <cstddef>
 #include <vector>
-#include <utility>
 
-std::pair<std::vector<std::vector<float>>, std::vector<int>> get_training_data();
+struct MnistDataset {
+    std::vector<std::vector<float>> images;
+    std::vector<int> labels;
+    std::size_t rows;
+    std::size_t columns;
+};
 
-std::pair<std::vector<std::vector<float>>, std::vector<int>> get_test_data();
+MnistDataset get_training_data();
+
+MnistDataset get_test_data();
