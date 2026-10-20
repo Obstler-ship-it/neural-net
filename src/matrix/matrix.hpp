@@ -42,6 +42,10 @@ class Matrix {
         float& operator()(size_t row, size_t column);
         float operator()(size_t row, size_t column) const;
 
+        // Für die Faltung
+        // Gibt einen float anstatt float& zurück ohne Referenz
+        //float operator[](size_t row, size_t column);
+
         // vielleicht brauch ich es mal
         void resize(size_t row, size_t column);
 

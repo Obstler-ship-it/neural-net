@@ -9,7 +9,8 @@
 struct Images{
     std::vector<float> data;
     size_t number_images;
-   size_t columns_per_image;
+    size_t columns_per_image;
+    size_t rows_per_image;
 };
 
 /*
@@ -28,6 +29,7 @@ inline Images mec(const std::vector<std::vector<float>>& images, size_t rows, si
     Images result;
     result.number_images = images.size();
     result.columns_per_image = columns;
+    result.rows_per_image = rows;
     result.data.reserve(result.number_images * rows * columns * kernel_size);
     size_t index;
 

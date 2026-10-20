@@ -54,6 +54,13 @@ inline float Matrix<Layout::RowMajor>::operator()(size_t row, size_t column) con
     return data[columns * row + column];
 }
 
+/*
+template<>
+inline float Matrix<Layout::RowMajor>::operator[](size_t row, size_t column) {
+    return data[columns * row + column];
+}
+*/
+
 template<>
 inline float& Matrix<Layout::RowMajor>::operator()(size_t row, size_t column) {
     return data[columns * row + column];
