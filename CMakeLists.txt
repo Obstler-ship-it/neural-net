@@ -11,6 +11,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 add_executable(MNIST
     main.cpp
     mnist_reader/reader.cpp
+    src/convolution/convolution.cpp
     src/layer/layer.cpp
     src/neural_network.cpp
 )
