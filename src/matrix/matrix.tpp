@@ -190,9 +190,9 @@ inline Matrix<Layout::RowMajor>& Matrix<Layout::RowMajor>::operator-=(const Matr
 
 template<Layout L>
 Matrix<L> Matrix<L>::sum_across_columns() {
-    if (data.empty()) {
+
+    if (data.empty())
         throw std::logic_error("Matrix ist leer!!");
-    }
 
     Matrix<L> result(rows, 1, Initialization::Uninitialized);
     for (size_t row = 0; row < rows; ++row) {

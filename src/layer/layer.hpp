@@ -5,8 +5,8 @@
 #include "../activation/activation.hpp"
 #include <cstddef>
 #include <cmath>
-#include <sys/types.h>
 
+template<class OptimizerType>
 class Layer{
     public:
         Layer(size_t input_size, size_t output_size, uint batch_size)
@@ -16,7 +16,9 @@ class Layer{
           W(output_size, input_size, Initialization::Random),
           a(input_size, batch_size, Initialization::Uninitialized),
           b(output_size, 1, Initialization::Zero),
-          dW(output_size, input_size, Initialization::Zero) {
+          db(output_size, 1, Initialization::Uninitialized),
+          dW(output_size, input_size, Initialization::Uninitialized) {
+              //TODO initialisierung sollte abhängig gemacht werden von der Aktivierungsfunktion
             W * std::sqrt(6.0f / static_cast<float>(input_size));
         }
 
@@ -25,9 +27,10 @@ class Layer{
         size_t batch_size;
 
         Matrix<Layout::RowMajor> W;
-        Matrix<Layout::ColumnMajor> a;
+        Matrix<Layout::ColumnMajor> a; //public
         Matrix<Layout::ColumnMajor> b;
 
+        Matrix<Layout::ColumnMajor> db;
         Matrix<Layout::ColumnMajor> dW;
 
         // Berechnet die Layer weiter mit Aktivierungsfunktion

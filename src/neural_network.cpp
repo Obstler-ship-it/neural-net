@@ -12,8 +12,8 @@
 #include <stdexcept>
 #include <vector>
 
-
-float NeuralNetwork::forward(const Matrix<Layout::ColumnMajor>& input, const std::vector<int>& y, Mode mod){
+template<class Optimizer>
+float NeuralNetwork<Optimizer>::forward(const Matrix<Layout::ColumnMajor>& input, const std::vector<int>& y, Mode mod){
     Layers[0].forward(input, *activation_);
     for (size_t i=1; i < Layers.size() - 1; i++){
         Layers[i].forward(Layers[i-1].a, *activation_);
@@ -29,7 +29,8 @@ float NeuralNetwork::forward(const Matrix<Layout::ColumnMajor>& input, const std
         throw std::logic_error("Gibt keinen Mode!");
 }
 
-void NeuralNetwork::backward(const Matrix<Layout::ColumnMajor>& input, const std::vector<int>& y){
+template<class Optimizer>
+void NeuralNetwork<Optimizer>::backward(const Matrix<Layout::ColumnMajor>& input, const std::vector<int>& y){
     auto& y_hat = Layers.back().a;
     Matrix<Layout::ColumnMajor> gradient = y_hat;
     if (loss_type == LossType::CrossEntropy) {
@@ -47,7 +48,8 @@ void NeuralNetwork::backward(const Matrix<Layout::ColumnMajor>& input, const std
     Layers[0].backward(learning_rate, gradient, *activation_, input);
 }
 
-void NeuralNetwork::train(const std::vector<std::vector<float>>& data, const std::vector<int>& labels){
+template<class Optimizer>
+void NeuralNetwork<Optimizer>::train(const std::vector<std::vector<float>>& data, const std::vector<int>& labels){
 
     if (labels.size() != data.size())
         throw std::invalid_argument("Unterschiedliche Anzahl Labels und Datensätze");
@@ -106,7 +108,8 @@ void NeuralNetwork::train(const std::vector<std::vector<float>>& data, const std
 
 }
 
-void NeuralNetwork::test(const std::vector<std::vector<float>>& data, const std::vector<int>& y){
+template<class Optimizer>
+void NeuralNetwork<Optimizer>::test(const std::vector<std::vector<float>>& data, const std::vector<int>& y){
 
     if (y.size() != data.size())
         throw std::invalid_argument("Unterschiedliche Anzahl Labels und Datensätze");

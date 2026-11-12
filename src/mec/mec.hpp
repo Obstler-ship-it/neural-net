@@ -6,7 +6,7 @@
 #include <stdexcept>
 #include <vector>
 
-struct Images{
+struct Dataset{
     std::vector<float> data;
     size_t number_images;
     size_t columns_per_image;
@@ -19,14 +19,14 @@ struct Images{
  * @param Images, rows, columns, kernel_size k x k
  * @return std::vector<float> data, size_t number_images, size_t rows_per_image
  */
-Images mec(const std::vector<std::vector<float>>& images, size_t rows, size_t columns, size_t kernel_size);
+Dataset mec(const std::vector<std::vector<float>>& images, size_t rows, size_t columns, size_t kernel_size);
 
-inline Images mec(const std::vector<std::vector<float>>& images, size_t rows, size_t columns, size_t kernel_size){
+inline Dataset mec(const std::vector<std::vector<float>>& images, size_t rows, size_t columns, size_t kernel_size){
 
     if (kernel_size == 0 || kernel_size > rows || kernel_size > columns)
         throw std::invalid_argument("Ungültige Kernelgröße");
 
-    Images result;
+    Dataset result;
     result.number_images = images.size();
     result.columns_per_image = columns;
     result.rows_per_image = rows;

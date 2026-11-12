@@ -1,12 +1,6 @@
 // Bildet den Orchestrator für die Layers, Activation, Softmax und Loss - Funktionen
 #pragma once
 
-// NeuralNetwork net(
-//     {784, 128, 32, 10},
-//     ActivationType::ReLU,
-//     LossType::CrossEntropy
-// );
-
 #include "matrix/matrix.hpp"
 #include "layer/layer.hpp"
 #include "activation/reLu.hpp"
@@ -36,10 +30,9 @@ enum class Mode{
     test
 };
 
+template<class OptimizerType>
 class NeuralNetwork{
     public:
-
-        std::vector<Layer> Layers;
 
         NeuralNetwork(std::vector<std::size_t> layer_sizes,
             size_t number_labels,
@@ -76,6 +69,20 @@ class NeuralNetwork{
 
         }
 
+        //trainiert das Neuronale Netz
+        void train(const std::vector<std::vector<float>>&, const std::vector<int>&);
+
+        // Bestimmt den Loss auf dem Testdatensatz
+        void test(const std::vector<std::vector<float>>&, const std::vector<int>&);
+
+
+        // Gibt eine Printe Ausgabe für den(zufälligen) Batch
+        void forward_test();
+
+    private:
+
+        std::vector<Layer<OptimizerType>> Layers;
+
         std::unique_ptr<ActivationFunction> activation_;
         std::unique_ptr<LossFunction> loss_;
         const size_t number_labels;
@@ -85,17 +92,8 @@ class NeuralNetwork{
 
         bool trained = false;
 
-        //trainiert das Neuronale Netz
-        void train(const std::vector<std::vector<float>>&, const std::vector<int>&);
-
-        // Bestimmt den Loss auf dem Testdatensatz
-        void test(const std::vector<std::vector<float>>&, const std::vector<int>&);
-
         // Gibt den Loss vom Batch an
         float forward(const Matrix<Layout::ColumnMajor>& input, const std::vector<int>& labels, Mode);
-
-        // Gibt eine Printe Ausgabe für den Batch
-        void forward_test();
 
         // Berechnet die Ableitungen und passt die Gewichte an
         void backward(const Matrix<Layout::ColumnMajor>& input, const std::vector<int>& labels);

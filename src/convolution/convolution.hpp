@@ -24,7 +24,7 @@ class Convolution{
         Matrix<Layout::RowMajor> Kernels;
 
         // Forward für die Faltung eines mec std::vectors
-        Matrix<Layout::ColumnMajor> forward(const Images& input, std::span<const size_t> batch_indizes, const ActivationFunction& activation_function);
+        Matrix<Layout::ColumnMajor> forward(const Dataset& input, std::span<const size_t> batch_indizes, const ActivationFunction& activation_function);
 
         //backward mit Ausgabe eines Gradienten
         Matrix<Layout::ColumnMajor> backward(Matrix<Layout::ColumnMajor>& dL, const ActivationFunction& activation_function, const Matrix<Layout::ColumnMajor>& a_prev, float learning_rate);

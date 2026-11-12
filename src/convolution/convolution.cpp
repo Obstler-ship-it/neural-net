@@ -4,7 +4,7 @@
 #include <cstddef>
 #include <vector>
 
-Matrix<Layout::ColumnMajor> Convolution::forward(const Images& input, std::span<const size_t> batch_indizes, const ActivationFunction& activation_function){
+Matrix<Layout::ColumnMajor> Convolution::forward(const Dataset& input, std::span<const size_t> batch_indizes, const ActivationFunction& activation_function){
     const size_t output_rows = input.rows_per_image - KERNEL_SIZE + 1;
     const size_t output_columns = input.columns_per_image - KERNEL_SIZE + 1;
     const size_t output_size = output_rows * output_columns * NUMBER_KERNELS;
@@ -33,7 +33,7 @@ Matrix<Layout::ColumnMajor> Convolution::forward(const Images& input, std::span<
                     for (size_t kernel = 0; kernel < NUMBER_KERNELS; ++kernel)
                         sums[kernel] += pixel * Kernels(idx, kernel);
                 }
-
+                
                 result.data.insert(result.data.end(), sums.begin(), sums.end());
             }
         }
