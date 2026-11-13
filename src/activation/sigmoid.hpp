@@ -25,4 +25,9 @@ class Sigmoid: public ActivationFunction {
                 dL.data[i] *= a.data[i] * (1.0f - a.data[i]);
             }
         }
+
+        //Xavier-/ Glorot-Initialisierung
+        float scale(size_t in, size_t out) const override{
+            return std::sqrt(6/(in + out));
+        }
 };

@@ -59,7 +59,9 @@ bash start.sh
 
 #TODO
 
+```
 -Implementing Convolution Layers
--Algo for estimating the learning-rate and to stop the training at some point
+-Algo for estimating the learning-rate and to stop the training at some point (Optimizer and validation after every epoch)
 -Functionality / Print for one random Digit and the probabilities
 -start via consol with std::cin
+```

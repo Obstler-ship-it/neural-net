@@ -52,6 +52,9 @@ class Matrix {
         // Skalarmultiplikation
         Matrix<L>& operator*(float number);
 
+        //Addition
+        //Matrix<L>& operator+(Matrix<L>);
+
         // Multiplikation zweier Matrizen
         Matrix<Layout::ColumnMajor> operator*(const Matrix<Layout::ColumnMajor>& other);
 

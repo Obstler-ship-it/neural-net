@@ -3,6 +3,7 @@
 #include "activation.hpp"
 #include "../matrix/matrix.hpp"
 #include <algorithm>
+#include <cmath>
 #include <cstddef>
 #include <stdexcept>
 #include <vector>
@@ -27,5 +28,10 @@ class ReLU: public ActivationFunction {
                     dL.data[i] = 0.0f;
             }
 
+        }
+
+        //He-/Kaimling-Initialisierung
+        float scale(size_t in, size_t out) const override{
+            return std::sqrt(6/in);
         }
 };

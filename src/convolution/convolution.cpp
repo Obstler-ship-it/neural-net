@@ -1,6 +1,6 @@
 #include "convolution.hpp"
-#include "matrix/matrix.hpp"
-#include "mec/mec.hpp"
+#include "../matrix/matrix.hpp"
+#include "../mec/mec.hpp"
 #include <cstddef>
 #include <vector>
 
@@ -33,7 +33,7 @@ Matrix<Layout::ColumnMajor> Convolution::forward(const Dataset& input, std::span
                     for (size_t kernel = 0; kernel < NUMBER_KERNELS; ++kernel)
                         sums[kernel] += pixel * Kernels(idx, kernel);
                 }
-                
+
                 result.data.insert(result.data.end(), sums.begin(), sums.end());
             }
         }

@@ -3,7 +3,7 @@
 
 #include "matrix/matrix.hpp"
 #include "layer/layer.hpp"
-#include "activation/reLu.hpp"
+#include "activation/relu.hpp"
 #include "activation/sigmoid.hpp"
 #include "activation/activation.hpp"
 #include "loss/loss_function.hpp"
@@ -48,11 +48,6 @@ class NeuralNetwork{
             if (layer_sizes.size() < 3)
                 throw std::invalid_argument("Es muss mindestens 3 Layer geben");
 
-            Layers.reserve(layer_sizes.size());
-            for (size_t index=1; index < layer_sizes.size(); index++){
-                Layers.emplace_back(layer_sizes[index - 1], layer_sizes[index], batch_size);
-            }
-
             if (activation == ActivationType::ReLU)
                 activation_ = std::make_unique<ReLU>();
             else if (activation == ActivationType::Sigmoid)
@@ -66,6 +61,11 @@ class NeuralNetwork{
                 loss_ = std::make_unique<MeanSquareError>();
             else
                 throw std::invalid_argument("Lossfunction existiert nicht!");
+
+            Layers.reserve(layer_sizes.size());
+            for (size_t index=1; index < layer_sizes.size(); index++){
+                Layers.emplace_back(layer_sizes[index - 1], layer_sizes[index], batch_size, activation);
+            }
 
         }
 
