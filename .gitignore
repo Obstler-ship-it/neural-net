@@ -6,3 +6,4 @@ build-clang/
 compile_commands.json
 *.o
 *.out
+profiling*.csv

@@ -1,12 +1,15 @@
 #include "convolution.hpp"
-#include "matrix/matrix.hpp"
-#include "mec/mec.hpp"
+#include "../matrix/matrix.hpp"
+#include "../mec/mec.hpp"
+#include "../matrix/gemm.hpp"
+#include "../parallel.hpp"
+#include <algorithm>
 #include <cstddef>
 #include <stdexcept>
 #include <vector>
 
-Matrix<Layout::ColumnMajor> Convolution::forward(const Images& input, std::span<const size_t> batch_indizes, const ActivationFunction& activation_function){
-    if (KERNEL_SIZE == 0 || NUMBER_KERNELS == 0 ||
+const Matrix<Layout::ColumnMajor>& Convolution::forward(const Images& input, std::span<const size_t> batch_indizes, const ActivationFunction& activation_function){
+    if (INPUT_CHANNELS != 1 ||
         input.rows_per_image < KERNEL_SIZE || input.columns_per_image < KERNEL_SIZE ||
         input.number_images == 0 || batch_indizes.empty())
         throw std::invalid_argument("Ungültige Bild-, Kernel- oder Batchgröße");
@@ -23,40 +26,67 @@ Matrix<Layout::ColumnMajor> Convolution::forward(const Images& input, std::span<
     const size_t output_columns = input.columns_per_image - KERNEL_SIZE + 1;
     const size_t output_size = output_rows * output_columns * NUMBER_KERNELS;
 
-    Matrix<Layout::ColumnMajor> result(output_size, batch_indizes.size(), Initialization::Uninitialized);
+    activation_.resize(output_size, batch_indizes.size());
+    auto& result = activation_;
 
     // Anzahl gespeicherter MEC-Werte pro Bild
     const size_t image_size = input.data.size() / input.number_images;
     const size_t strip_size = input.columns_per_image * KERNEL_SIZE;
 
-    std::vector<float> sums(NUMBER_KERNELS);
-
-    for (size_t image_index: batch_indizes) {
-        const size_t image_offset = image_index * image_size;
-
-        for (size_t y = 0; y < output_rows; ++y) {
-            for (size_t x = 0; x < output_columns; ++x) {
-                const size_t patch_offset = image_offset + y * strip_size + x * KERNEL_SIZE;
-
-                for (size_t kernel = 0; kernel < NUMBER_KERNELS; ++kernel)
-                    sums[kernel] = Bias.data[kernel];
-
-                for (size_t idx = 0; idx < KERNEL_SIZE_SQUARED; ++idx) {
-                    const float pixel = input.data[patch_offset + idx];
-
-                    for (size_t kernel = 0; kernel < NUMBER_KERNELS; ++kernel)
-                        sums[kernel] += pixel * Kernels(idx, kernel);
-                }
-
-                result.data.insert(result.data.end(), sums.begin(), sums.end());
+    const size_t workers = parallel::worker_count(batch_indizes.size(), output_size * KERNEL_SIZE_SQUARED);
+    parallel::for_ranges(batch_indizes.size(), workers, [&](size_t, size_t begin, size_t end) {
+        for (size_t batch = begin; batch < end; ++batch) {
+            float* output = result.data.data() + batch * output_size;
+            for (size_t position = 0; position < output_rows * output_columns; ++position)
+                std::copy(Bias.data.begin(), Bias.data.end(), output + position * NUMBER_KERNELS);
+            for (size_t output_row = 0; output_row < output_rows; ++output_row) {
+                const float* strip = input.data.data() + batch_indizes[batch] * image_size + output_row * strip_size;
+                matrix_detail::multiply_add(strip, Kernels.data.data(), output + output_row * output_columns * NUMBER_KERNELS,
+                                            output_columns, KERNEL_SIZE_SQUARED, NUMBER_KERNELS, KERNEL_SIZE);
             }
         }
-    }
+    });
 
     activation_function.forward(result);
-    activation_ = result;
     input_rows_ = input.rows_per_image;
     input_columns_ = input.columns_per_image;
+    return result;
+}
+
+const Matrix<Layout::ColumnMajor>& Convolution::forward(
+    const Matrix<Layout::ColumnMajor>& input, size_t rows, size_t columns,
+    const ActivationFunction& activation_function) {
+    if (rows < KERNEL_SIZE || columns < KERNEL_SIZE || input.columns == 0 ||
+        input.rows != rows * columns * INPUT_CHANNELS ||
+        input.data.size() != input.rows * input.columns)
+        throw std::invalid_argument("Convolution-Eingabe passt nicht zu den Feature-Maps");
+
+    const size_t output_rows = rows - KERNEL_SIZE + 1;
+    const size_t output_columns = columns - KERNEL_SIZE + 1;
+    const size_t positions = output_rows * output_columns;
+    activation_.resize(positions * NUMBER_KERNELS, input.columns);
+    auto& result = activation_;
+    const size_t workers = parallel::worker_count(input.columns, positions * Kernels.rows * NUMBER_KERNELS);
+    parallel::for_ranges(input.columns, workers, [&](size_t, size_t begin, size_t end) {
+        for (size_t batch = begin; batch < end; ++batch) {
+            float* output = result.data.data() + batch * result.rows;
+            for (size_t position = 0; position < positions; ++position)
+                std::copy(Bias.data.begin(), Bias.data.end(), output + position * NUMBER_KERNELS);
+            for (size_t output_row = 0; output_row < output_rows; ++output_row)
+                for (size_t position = 0; position < KERNEL_SIZE_SQUARED; ++position) {
+                    const size_t input_offset = batch * input.rows
+                        + ((output_row + position % KERNEL_SIZE) * columns + position / KERNEL_SIZE) * INPUT_CHANNELS;
+                    matrix_detail::multiply_add(input.data.data() + input_offset,
+                                                Kernels.data.data() + position * INPUT_CHANNELS * NUMBER_KERNELS,
+                                                output + output_row * output_columns * NUMBER_KERNELS,
+                                                output_columns, INPUT_CHANNELS, NUMBER_KERNELS, INPUT_CHANNELS);
+                }
+        }
+    });
+
+    activation_function.forward(result);
+    input_rows_ = rows;
+    input_columns_ = columns;
     return result;
 }
 
@@ -83,13 +113,11 @@ void Convolution::backward_impl(
         throw std::logic_error("backward benötigt einen vorherigen forward-Aufruf");
     if (dL.rows != activation_.rows || dL.columns != activation_.columns ||
         dL.data.size() != activation_.data.size() ||
-        a_prev.rows != input_rows_ * input_columns_ ||
+        a_prev.rows != input_rows_ * input_columns_ * INPUT_CHANNELS ||
         a_prev.columns != activation_.columns ||
         a_prev.data.size() != a_prev.rows * a_prev.columns)
         throw std::invalid_argument("Gradient oder Eingabe passen nicht zum letzten forward-Batch");
 
-    Matrix<Layout::RowMajor> kernel_gradient(KERNEL_SIZE_SQUARED, NUMBER_KERNELS, Initialization::Zero);
-    std::vector<float> bias_gradient(NUMBER_KERNELS, 0.0f);
     if (input_gradient)
         input_gradient->resize(a_prev.rows, a_prev.columns);
 
@@ -97,37 +125,51 @@ void Convolution::backward_impl(
 
     const size_t output_rows = input_rows_ - KERNEL_SIZE + 1;
     const size_t output_columns = input_columns_ - KERNEL_SIZE + 1;
-    for (size_t batch = 0; batch < dL.columns; ++batch) {
-        for (size_t y = 0; y < output_rows; ++y) {
-            for (size_t x = 0; x < output_columns; ++x) {
-                const size_t output_offset = batch * dL.rows
-                    + (y * output_columns + x) * NUMBER_KERNELS;
-                for (size_t kernel = 0; kernel < NUMBER_KERNELS; ++kernel)
-                    bias_gradient[kernel] += dL.data[output_offset + kernel];
-
-                for (size_t idx = 0; idx < KERNEL_SIZE_SQUARED; ++idx) {
-                    // MEC speichert innerhalb des Kernels zuerst die vertikale Richtung.
-                    const size_t input_offset = batch * a_prev.rows
-                        + (y + idx % KERNEL_SIZE) * input_columns_ + x + idx / KERNEL_SIZE;
-                    const float pixel = a_prev.data[input_offset];
-                    float pixel_gradient = 0.0f;
-                    for (size_t kernel = 0; kernel < NUMBER_KERNELS; ++kernel) {
-                        const float gradient = dL.data[output_offset + kernel];
-                        kernel_gradient(idx, kernel) += pixel * gradient;
-                        if (input_gradient)
-                            pixel_gradient += Kernels(idx, kernel) * gradient;
-                    }
-                    // Beiträge überlappender Ausschnitte sammeln, bevor Gewichte geändert werden.
-                    if (input_gradient)
-                        input_gradient->data[input_offset] += pixel_gradient;
-                }
-            }
-        }
+    const size_t positions = output_rows * output_columns;
+    const size_t workers = parallel::worker_count(dL.columns, positions * Kernels.rows * NUMBER_KERNELS);
+    std::vector<std::vector<float>> kernel_gradients(workers, std::vector<float>(Kernels.data.size(), 0.0f));
+    std::vector<std::vector<float>> bias_gradients(workers, std::vector<float>(NUMBER_KERNELS, 0.0f));
+    std::vector<float> transposed_kernels;
+    if (input_gradient) {
+        transposed_kernels.resize(Kernels.data.size());
+        for (size_t position = 0; position < KERNEL_SIZE_SQUARED; ++position)
+            for (size_t kernel = 0; kernel < NUMBER_KERNELS; ++kernel)
+                for (size_t channel = 0; channel < INPUT_CHANNELS; ++channel)
+                    transposed_kernels[(position * NUMBER_KERNELS + kernel) * INPUT_CHANNELS + channel]
+                        = Kernels(position * INPUT_CHANNELS + channel, kernel);
     }
+    parallel::for_ranges(dL.columns, workers, [&](size_t worker, size_t begin, size_t end) {
+        for (size_t batch = begin; batch < end; ++batch) {
+            const float* gradient = dL.data.data() + batch * dL.rows;
+            for (size_t position = 0; position < positions; ++position)
+                for (size_t kernel = 0; kernel < NUMBER_KERNELS; ++kernel)
+                    bias_gradients[worker][kernel] += gradient[position * NUMBER_KERNELS + kernel];
+            for (size_t output_row = 0; output_row < output_rows; ++output_row)
+                for (size_t position = 0; position < KERNEL_SIZE_SQUARED; ++position) {
+                    const size_t input_offset = batch * a_prev.rows
+                        + ((output_row + position % KERNEL_SIZE) * input_columns_ + position / KERNEL_SIZE) * INPUT_CHANNELS;
+                    const size_t kernel_offset = position * INPUT_CHANNELS * NUMBER_KERNELS;
+                    const float* gradient_row = gradient + output_row * output_columns * NUMBER_KERNELS;
+                    matrix_detail::multiply_add(a_prev.data.data() + input_offset, gradient_row,
+                                                kernel_gradients[worker].data() + kernel_offset,
+                                                INPUT_CHANNELS, output_columns, NUMBER_KERNELS, 1, INPUT_CHANNELS);
+                    if (input_gradient)
+                        matrix_detail::multiply_add(gradient_row, transposed_kernels.data() + kernel_offset,
+                                                    input_gradient->data.data() + input_offset,
+                                                    output_columns, NUMBER_KERNELS, INPUT_CHANNELS, NUMBER_KERNELS);
+                }
+        }
+    });
 
     const float scale = learning_rate / static_cast<float>(dL.columns);
-    for (size_t i = 0; i < Kernels.data.size(); ++i)
-        Kernels.data[i] -= scale * kernel_gradient.data[i];
-    for (size_t kernel = 0; kernel < NUMBER_KERNELS; ++kernel)
-        Bias.data[kernel] -= scale * bias_gradient[kernel];
+    for (size_t weight = 0; weight < Kernels.data.size(); ++weight) {
+        float gradient = 0.0f;
+        for (size_t worker = 0; worker < workers; ++worker) gradient += kernel_gradients[worker][weight];
+        Kernels.data[weight] -= scale * gradient;
+    }
+    for (size_t kernel = 0; kernel < NUMBER_KERNELS; ++kernel) {
+        float gradient = 0.0f;
+        for (size_t worker = 0; worker < workers; ++worker) gradient += bias_gradients[worker][kernel];
+        Bias.data[kernel] -= scale * gradient;
+    }
 }

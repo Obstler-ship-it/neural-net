@@ -22,7 +22,7 @@ public:
         if (input.rows != rows * columns * channels || input.columns == 0 ||
             input.data.size() != input.rows * input.columns)
             throw std::invalid_argument("Pooling-Eingabe passt nicht zu den Feature-Maps");
-        Matrix<Layout::ColumnMajor> result(output_rows, input.columns, Initialization::Uninitialized);
+        Matrix<Layout::ColumnMajor> result(output_rows, input.columns, Initialization::Zero);
         maxima_.resize(output_rows * input.columns);
         size_t destination = 0;
         for (size_t batch = 0; batch < input.columns; ++batch) {
@@ -31,11 +31,14 @@ public:
                     for (size_t channel = 0; channel < channels; ++channel) {
                         const size_t top_left = batch * input.rows + (2 * y * columns + 2 * x) * channels + channel;
                         size_t best = top_left;
-                        // Striktes > wählt bei Gleichstand die erste Position.
-                        for (size_t offset : {channels, columns * channels, (columns + 1) * channels})
-                            if (input.data[top_left + offset] > input.data[best])
-                                best = top_left + offset;
-                        result.data.push_back(input.data[best]);
+                        float best_value = input.data[top_left];
+                        for (size_t offset : {channels, columns * channels, (columns + 1) * channels}) {
+                            const float candidate = input.data[top_left + offset];
+                            const bool larger = candidate > best_value;
+                            best = larger ? top_left + offset : best;
+                            best_value = larger ? candidate : best_value;
+                        }
+                        result.data[destination] = best_value;
                         maxima_[destination++] = best;
                     }
                 }

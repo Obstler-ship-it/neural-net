@@ -4,6 +4,8 @@
 #include "matrix/matrix.hpp"
 #include "convolution/convolution.hpp"
 #include "pooling/max_pool.hpp"
+#include "profiling.hpp"
+#include <format>
 #include <span>
 #include "layer/layer.hpp"
 #include "activation/reLu.hpp"
@@ -12,6 +14,7 @@
 #include "loss/loss_function.hpp"
 #include "loss/cross_entropy.hpp"
 #include "loss/mse.hpp"
+#include <cmath>
 #include <cstddef>
 #include <memory>
 #include <stdexcept>
@@ -38,6 +41,7 @@ class NeuralNetwork{
 
         std::vector<Layer> Layers;
         Convolution convolution;
+        Convolution second_convolution;
 
         // layer_sizes[0] ist die abgeflachte Größe nach dem 2x2-Max-Pooling.
         NeuralNetwork(std::vector<std::size_t> layer_sizes,
@@ -47,8 +51,11 @@ class NeuralNetwork{
             size_t batch_size=64,
             float learning_rate=0.05,
             size_t kernel_size=3,
-            size_t number_kernels=8)
-        : convolution(kernel_size, number_kernels), number_labels(number_labels), batch_size(batch_size), learning_rate(learning_rate), loss_type(loss) {
+            size_t number_kernels=8,
+            size_t second_number_kernels=8)
+        : convolution(kernel_size, number_kernels),
+          second_convolution(kernel_size, second_number_kernels, number_kernels),
+          number_labels(number_labels), batch_size(batch_size), learning_rate(learning_rate), loss_type(loss) {
 
             if (learning_rate <= 0.0f)
                 throw std::invalid_argument("Learning rate must be greater than zero");
@@ -64,9 +71,13 @@ class NeuralNetwork{
                 if (size == 0)
                     throw std::invalid_argument("Layergrößen müssen positiv sein");
 
+            second_convolution.Kernels * std::sqrt(6.0f / static_cast<float>(second_convolution.Kernels.rows));
+
             Layers.reserve(layer_sizes.size());
             for (size_t index=1; index < layer_sizes.size(); index++){
                 Layers.emplace_back(layer_sizes[index - 1], layer_sizes[index], batch_size);
+                forward_stage_names_.push_back(std::format("forward.dense{}.{}x{}", index, layer_sizes[index - 1], layer_sizes[index]));
+                backward_stage_names_.push_back(std::format("backward.dense{}.{}x{}", index, layer_sizes[index - 1], layer_sizes[index]));
             }
 
             if (activation == ActivationType::ReLU)
@@ -94,9 +105,11 @@ class NeuralNetwork{
 
         bool trained = false;
 
+        void set_profiler(TimingProfiler& profiler) { profiler_ = &profiler; }
+
         // MEC-Daten werden einmal vorbereitet; Rohbilder dienen den Kernelgradienten.
         void train(const std::vector<std::vector<float>>& data, const Images& mec_data,
-                   const std::vector<int>& labels, size_t max_samples = 8000 * 64);
+                   const std::vector<int>& labels, size_t max_samples = 10500 * 64);
 
         // Wertet den Datensatz in Batches aus, einschließlich des letzten Teilbatches.
         void test(const Images& data, const std::vector<int>& labels);
@@ -109,6 +122,18 @@ class NeuralNetwork{
         void backward(const Matrix<Layout::ColumnMajor>& input, const std::vector<int>& labels);
 
     private:
+        TimingProfiler* profiler_ = nullptr;
+        std::vector<std::string> forward_stage_names_;
+        std::vector<std::string> backward_stage_names_;
+
+        template<typename Function>
+        decltype(auto) measure(std::string_view name, Function&& function) {
+            TimingProfiler::Scope scope(profiler_, name);
+            return std::forward<Function>(function)();
+        }
+
+        MaxPool2D first_pooling_;
+        Matrix<Layout::ColumnMajor> first_pooled_output_{0, 0, Initialization::Zero};
         MaxPool2D pooling_;
         Matrix<Layout::ColumnMajor> pooled_output_{0, 0, Initialization::Zero};
         size_t input_size_ = 0;
