@@ -60,8 +60,8 @@ class NeuralNetwork{
             if (learning_rate <= 0.0f)
                 throw std::invalid_argument("Learning rate must be greater than zero");
 
-            if (layer_sizes.size() < 3)
-                throw std::invalid_argument("Es muss mindestens 3 Layer geben");
+            if (layer_sizes.size() < 2)
+                throw std::invalid_argument("Es muss mindestens 2 Layer geben");
 
             if (batch_size == 0 || number_labels == 0 || kernel_size == 0 || number_kernels == 0)
                 throw std::invalid_argument("Batch-, Klassen- und Kernelgrößen müssen positiv sein");

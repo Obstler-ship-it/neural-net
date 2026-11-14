@@ -17,8 +17,8 @@ int main(){
     const size_t seed = 165;
     set_random_seed(seed);
     constexpr size_t kernel_size = 3;
-    constexpr size_t number_kernels = 64;
-    constexpr size_t second_number_kernels = 16;
+    constexpr size_t number_kernels = 32;
+    constexpr size_t second_number_kernels = 64;
 
     std::println("Lade MNIST-Trainingsdaten ...");
     std::fflush(stdout);
@@ -31,8 +31,8 @@ int main(){
     std::println("Initialisiere Netzwerk: {} Bilder, {} Features nach Max-Pooling pro Bild ...", input_train.size(), features);
     std::fflush(stdout);
     auto net = profiler.measure("network.initialize", [&] {
-        return NeuralNetwork({features, 128, 10}, 10,
-                      ActivationType::ReLU, LossType::CrossEntropy, 64, 0.025,
+        return NeuralNetwork({features, 10}, 10,
+                      ActivationType::ReLU, LossType::CrossEntropy, 64, 0.015,
                       kernel_size, number_kernels, second_number_kernels);
     });
     if (profiler.enabled()) net.set_profiler(profiler);
