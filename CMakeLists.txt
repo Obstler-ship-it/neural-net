@@ -11,8 +11,6 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 add_executable(MNIST
     main.cpp
     mnist_reader/reader.cpp
-    src/layer/layer.cpp
-    src/neural_network.cpp
 )
 
 target_include_directories(MNIST PRIVATE
@@ -25,6 +23,9 @@ target_compile_definitions(MNIST PRIVATE
 )
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    target_link_options(MNIST PRIVATE
+        $<$<CONFIG:Release>:-ffast-math>
+    )
     target_compile_options(MNIST PRIVATE
         $<$<CONFIG:Release>:-O3>
         $<$<CONFIG:Release>:-ffast-math>

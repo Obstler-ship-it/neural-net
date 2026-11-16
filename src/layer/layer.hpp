@@ -19,7 +19,7 @@ class Layer{
           db(output_size, 1, Initialization::Uninitialized),
           dW(output_size, input_size, Initialization::Uninitialized) {
             //initialisierung abhängig von der Aktivierungsfunktion
-            W * activation_function.scale(input_size, output_size);
+            W *= activation_function.scale(input_size, output_size);
         }
 
         //Enthält die Ausgabe nach der Layer und Aktivierungsfunktion
@@ -46,11 +46,13 @@ class Layer{
         void forward(const Matrix<Layout::ColumnMajor>& activation);
 
         // Berechnet die nächste Ableitung und aktualisiert die Gewichte mit Aktivierungsfunktion
-        Matrix<Layout::ColumnMajor> backward(Matrix<Layout::ColumnMajor>& dL, const ActivationFunction& activation_function, const Matrix<Layout::ColumnMajor>& a_prev,float learning_rate);
+        Matrix<Layout::ColumnMajor> backward(Matrix<Layout::ColumnMajor>& dL, const ActivationFunction& activation_function, const Matrix<Layout::ColumnMajor>& a_prev);
 
         // Berechnet die nächste Ableitung und aktualisiert die Gewichte ohne Aktivierungsfunktion
-        Matrix<Layout::ColumnMajor> backward(Matrix<Layout::ColumnMajor>& dL, const Matrix<Layout::ColumnMajor>& a_prev,float learning_rate);
+        Matrix<Layout::ColumnMajor> backward(Matrix<Layout::ColumnMajor>& dL, const Matrix<Layout::ColumnMajor>& a_prev);
 
         // Aktualisiert die Gewichte ohne die nächste Ableitung zu berechnen
-        void backward(float learning_rate, Matrix<Layout::ColumnMajor>& dL, const ActivationFunction& activation_function, const Matrix<Layout::ColumnMajor>& a_prev);
+        void backward(Matrix<Layout::ColumnMajor>& dL, const Matrix<Layout::ColumnMajor>& a_prev, const ActivationFunction& activation_function);
 };
+
+#include "layer.cpp"

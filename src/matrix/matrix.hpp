@@ -3,6 +3,7 @@
 
 #include <cstddef>
 #include <sys/types.h>
+#include <random>
 #include <vector>
 
 enum class Initialization {
@@ -49,8 +50,11 @@ class Matrix {
         // vielleicht brauch ich es mal
         void resize(size_t row, size_t column);
 
+        // Skalarmultiplikation InPlace
+        Matrix<L>& operator*=(float number);
+
         // Skalarmultiplikation
-        Matrix<L>& operator*(float number);
+        Matrix<L> operator*(float number);
 
         //Addition
         //Matrix<L>& operator+(Matrix<L>);
@@ -70,7 +74,13 @@ class Matrix {
         Matrix<L>& operator-=(const Matrix<OtherLayout>& other);
 
         // Summiert entlang der Spalten
-        Matrix<L> sum_across_columns();
+        Matrix<L> sumAcrossColumns();
+
+        //Elementenweises quadrieren
+        Matrix<L>& cwiseSquareInPlace();
+
+        //Elementenweises wurzelziehen
+        Matrix<L>& cwiseSqrtInPlace();
 
         // einfachrer Print
         void print() const;
@@ -108,4 +118,8 @@ Matrix<Layout::ColumnMajor> operator*(const TransposeExpr<L>& A, const Matrix<La
 template<Layout L>
 Matrix<Layout::ColumnMajor> operator*(const Matrix<Layout::ColumnMajor>& A, const TransposeExpr<L>& B);
 
-#include "matrix.tpp"
+std::mt19937& random_generator();
+void set_random_seed(unsigned int seed);
+
+// Template definitions must be visible when Matrix is instantiated.
+#include "matrix.cpp"

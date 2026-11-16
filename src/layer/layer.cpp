@@ -1,3 +1,5 @@
+#pragma once
+
 // Implementierung der Layer
 #include "layer.hpp"
 #include "../matrix/matrix.hpp"
@@ -27,36 +29,39 @@ void Layer<Optimizer>::forward(const Matrix<Layout::ColumnMajor>& activation){
 }
 
 template<class Optimizer>
-Matrix<Layout::ColumnMajor> Layer<Optimizer>::backward(Matrix<Layout::ColumnMajor>& dL, const ActivationFunction& activation_function, const Matrix<Layout::ColumnMajor>& a_prev, float learning_rate){
+Matrix<Layout::ColumnMajor> Layer<Optimizer>::backward(Matrix<Layout::ColumnMajor>& dL, const ActivationFunction& activation_function, const Matrix<Layout::ColumnMajor>& a_prev){
     activation_function.backward(dL, a); // = dL/dz
 
-    db =  dL.sum_across_columns() * (learning_rate * 1.0f / batch_size);
-    b -= db;
-    dW = (dL * a_prev.T()) * (1.0f / batch_size);
+    db =  dL.sumAcrossColumns() *= (1.0f / batch_size);
+    dW = (dL * a_prev.T()) *= (1.0f / batch_size);
     Matrix<Layout::ColumnMajor> result = W.T() * dL;
-    W -= (dW * learning_rate);
+    optimizer.step(dW, db);
+    b -= db;
+    W -= dW;
 
     return result;
 }
 
 template<class Optimizer>
-Matrix<Layout::ColumnMajor> Layer<Optimizer>::backward(Matrix<Layout::ColumnMajor>& dL, const Matrix<Layout::ColumnMajor>& a_prev, float learning_rate){
+Matrix<Layout::ColumnMajor> Layer<Optimizer>::backward(Matrix<Layout::ColumnMajor>& dL, const Matrix<Layout::ColumnMajor>& a_prev){
 
-    db =  dL.sum_across_columns() * (learning_rate * 1.0f / batch_size);
-    b -= db;
-    dW = (dL * a_prev.T()) * (1.0f / batch_size);
+    db =  dL.sumAcrossColumns() *= (1.0f / batch_size);
+    dW = (dL * a_prev.T()) *= (1.0f / batch_size);
     Matrix<Layout::ColumnMajor> result = W.T() * dL;
-    W -= (dW * learning_rate);
+    optimizer.step(dW, db);
+    b -= db;
+    W -= dW;
 
     return result;
 }
 
 template<class Optimizer>
-void Layer<Optimizer>::backward(float learning_rate, Matrix<Layout::ColumnMajor>& dL, const ActivationFunction& activation_function, const Matrix<Layout::ColumnMajor>& a_prev){
+void Layer<Optimizer>::backward(Matrix<Layout::ColumnMajor>& dL, const Matrix<Layout::ColumnMajor>& a_prev, const ActivationFunction& activation_function){
     activation_function.backward(dL, a); // = dL/dz
 
-    db =  dL.sum_across_columns() * (learning_rate * 1.0f / batch_size);
+    db = dL.sumAcrossColumns() *= (1.0f / batch_size);
+    dW = (dL * a_prev.T()) *= (1.0f / batch_size);
+    optimizer.step(dW, db);
     b -= db;
-    dW = (dL * a_prev.T()) * (1.0f / batch_size);
-    W -= (dW * learning_rate);
+    W -= dW;
 }

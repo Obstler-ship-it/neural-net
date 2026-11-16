@@ -32,6 +32,7 @@ class ReLU: public ActivationFunction {
 
         //He-/Kaimling-Initialisierung
         float scale(size_t in, size_t out) const override{
-            return std::sqrt(6/in);
+            return std::sqrt(6.0f / static_cast<float>(in));
+;
         }
 };

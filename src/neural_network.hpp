@@ -38,12 +38,8 @@ class NeuralNetwork{
             size_t number_labels,
             ActivationType activation,
             LossType loss,
-            size_t batch_size=64,
-            float learning_rate=0.05)
-        : number_labels(number_labels), batch_size(batch_size), learning_rate(learning_rate), loss_type(loss) {
-
-            if (learning_rate <= 0.0f)
-                throw std::invalid_argument("Learning rate must be greater than zero");
+            size_t batch_size=64)
+        : number_labels(number_labels), batch_size(batch_size), loss_type(loss) {
 
             if (layer_sizes.size() < 3)
                 throw std::invalid_argument("Es muss mindestens 3 Layer geben");
@@ -64,7 +60,7 @@ class NeuralNetwork{
 
             Layers.reserve(layer_sizes.size());
             for (size_t index=1; index < layer_sizes.size(); index++){
-                Layers.emplace_back(layer_sizes[index - 1], layer_sizes[index], batch_size, activation);
+                Layers.emplace_back(layer_sizes[index - 1], layer_sizes[index], batch_size, *activation_);
             }
 
         }
@@ -87,7 +83,6 @@ class NeuralNetwork{
         std::unique_ptr<LossFunction> loss_;
         const size_t number_labels;
         const size_t batch_size;
-        const float learning_rate;
         const LossType loss_type;
 
         bool trained = false;
@@ -98,3 +93,5 @@ class NeuralNetwork{
         // Berechnet die Ableitungen und passt die Gewichte an
         void backward(const Matrix<Layout::ColumnMajor>& input, const std::vector<int>& labels);
 };
+
+#include "neural_network.cpp"

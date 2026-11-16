@@ -3,16 +3,9 @@
 #include <iomanip>
 #include <iostream>
 #include <random>
+#include <cmath>
 #include <stdexcept>
-
-inline std::mt19937& random_generator() {
-    static std::mt19937 generator{42};
-    return generator;
-}
-
-inline void set_random_seed(unsigned int seed) {
-    random_generator().seed(seed);
-}
+#include "matrix.hpp"
 
 //random number between -1.0 und 1.0
 inline float random_float() {
@@ -74,11 +67,19 @@ void Matrix<L>::resize(size_t row, size_t column) {
 }
 
 template<Layout L>
-Matrix<L>& Matrix<L>::operator*(float number) {
+Matrix<L>& Matrix<L>::operator*=(float number) {
     for (auto& value : data) {
         value *= number;
     }
     return *this;
+}
+
+template<Layout L>
+Matrix<L> Matrix<L>::operator*(float number) {
+    Matrix<L> result {rows, columns, Initialization::Uninitialized};
+    for (auto x:data)
+        result.data.push_back(x*number);
+    return result;
 }
 
 template<>
@@ -189,7 +190,7 @@ inline Matrix<Layout::RowMajor>& Matrix<Layout::RowMajor>::operator-=(const Matr
 }
 
 template<Layout L>
-Matrix<L> Matrix<L>::sum_across_columns() {
+Matrix<L> Matrix<L>::sumAcrossColumns() {
 
     if (data.empty())
         throw std::logic_error("Matrix ist leer!!");
@@ -206,6 +207,20 @@ Matrix<L> Matrix<L>::sum_across_columns() {
 }
 
 template<Layout L>
+Matrix<L>& Matrix<L>::cwiseSquareInPlace(){
+    for (auto& x: data)
+        x *= x;
+    return *this;
+}
+
+template<Layout L>
+Matrix<L>& Matrix<L>::cwiseSqrtInPlace(){
+    for (auto& x: data)
+        x = std::sqrt(x);
+    return *this;
+}
+
+template<Layout L>
 void Matrix<L>::print() const {
     std::cout << "[\n";
     for (size_t row = 0; row < rows; ++row) {
@@ -217,3 +232,14 @@ void Matrix<L>::print() const {
     }
     std::cout << "]\n";
 }
+
+
+inline std::mt19937& random_generator() {
+    static std::mt19937 generator{42};
+    return generator;
+}
+
+inline void set_random_seed(unsigned int seed) {
+    random_generator().seed(seed);
+}
+

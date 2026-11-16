@@ -1,70 +1,74 @@
-//Implementierung für Ada Gradientenabstieg
+// Adam: Gradienten werden durch die zu subtrahierenden Updates ersetzt.
 #pragma once
 
-#include <algorithm>
 #include <cmath>
-#include <exception>
-#include <vector>
 #include <stdexcept>
+#include <vector>
 #include "../matrix/matrix.hpp"
 
-class Adam{
-    public:
-
+class Adam {
+public:
     struct Config {
-        float learning_rate = 0.01f;
+        float learning_rate = 0.001f;
         float beta1 = 0.9f;
         float beta2 = 0.999f;
+        float epsilon = 1e-8f;
     };
 
-    explicit Adam() : Adam(Config{}) {} //Default Konstruktor mit den Werten oben im struct
+    explicit Adam() : Adam(Config{}) {}
 
-    explicit Adam(const Config& config) //Konstruktor mit setter für Config
-        : config(config) {
-            if (!(config.learning_rate > 0))
-                throw std::invalid_argument("Adam: learning_rate must be > 0");
+    explicit Adam(const Config& config) : config(config) {
+        if (!(config.learning_rate > 0))
+            throw std::invalid_argument("Adam: learning_rate must be > 0");
+        if (!(config.beta1 >= 0 && config.beta1 < 1))
+            throw std::invalid_argument("Adam: beta1 must be in [0, 1)");
+        if (!(config.beta2 >= 0 && config.beta2 < 1))
+            throw std::invalid_argument("Adam: beta2 must be in [0, 1)");
+        if (!(config.epsilon > 0))
+            throw std::invalid_argument("Adam: epsilon must be > 0");
+    }
 
-            if (!(config.beta1 >= 0 && config.beta1 < 1))
-                throw std::invalid_argument("Adam: beta1 must be in [0, 1)");
-
-            if (!(config.beta2 >= 0 && config.beta2 < 1))
-                throw std::invalid_argument("Adam: beta2 must be in [0, 1)");
+    void step(Matrix<Layout::ColumnMajor>& dW, Matrix<Layout::ColumnMajor>& db) {
+        if (t == 0) {
+            weights.initialize(dW);
+            bias.initialize(db);
         }
 
-    void step(Matrix<Layout::ColumnMajor>& dW, Matrix<Layout::ColumnMajor>& db){
-        if (t==0){
+        ++t;
+        const float correction1 = config.learning_rate / (1 - std::pow(config.beta1, t));
+        const float correction2 = 1.0f / (1 - std::pow(config.beta2, t));
+        update(dW.data, weights, correction1, correction2);
+        update(db.data, bias, correction1, correction2);
+    }
 
-            //Initialisierung s_t
-            st_dW = dW.elemntweisemult(dW) * (1 - config.beta2);
-            st_db = db.elemntweisemult(db) * (1 - config.beta2);
-                
-            //Initialisierung m_t
-            mt_dW = dW * (1 - config.beta1);
-            mt_db = db * (1 - config.beta1);
-                
-            dW * (-config.learning_rate/(1 - config.beta1));
-            db * (-config.learning_rate/(1 - config.beta1));
-        } else {
+private:
+    struct State {
+        std::vector<float> m;
+        std::vector<float> v;
+        size_t rows = 0;
+        size_t columns = 0;
 
-            (st_dW * config.beta2) += (dW.elemntweisemult(dW) * (1 - config.beta2));
-            (st_db * config.beta2) += (db.elemntweisemult(db) * (1 - config.beta2));
+        void initialize(const Matrix<Layout::ColumnMajor>& gradient) {
+            rows = gradient.rows;
+            columns = gradient.columns;
+            m.assign(gradient.data.size(), 0.0f);
+            v.assign(gradient.data.size(), 0.0f);
+        }
+    };
 
-            (mt_dW * config.beta1) += (dW * (1 - config.beta1));
-            (mt_db * config.beta1) += (db * (1 - config.beta1));
-
-            dW = -config.learning_rate * ((mt_dW * (1.0f/(1-std::pow(config.beta1, t)))) / (st_dW * (1.0f/(1-std::pow(config.beta2, t)))).sqrt())
-            db = -config.learning_rate * ((mt_db * (1.0f/(1-std::pow(config.beta1, t)))) / (st_db * (1.0f/(1-std::pow(config.beta2, t)))).sqrt())
+    void update(std::vector<float>& gradient, State& state, float correction1, float correction2) {
+        // Ein Durchlauf, keine temporaeren Matrizen oder Broadcast-Indexierung.
+        for (size_t i = 0; i < gradient.size(); ++i) {
+            const float g = gradient[i];
+            state.m[i] = config.beta1 * state.m[i] + (1 - config.beta1) * g;
+            state.v[i] = config.beta2 * state.v[i] + (1 - config.beta2) * g * g;
+            gradient[i] = (state.m[i] * correction1)
+                / (std::sqrt(state.v[i] * correction2) + config.epsilon);
         }
     }
 
-    private:
-         const Config& config;
-         Matrix<Layout::ColumnMajor> mt_dW {0,0 ,Initialization::Uninitialized};
-         Matrix<Layout::ColumnMajor> mt_db {0,0 ,Initialization::Uninitialized};
-
-         Matrix<Layout::ColumnMajor> st_dW {0,0 ,Initialization::Uninitialized};
-         Matrix<Layout::ColumnMajor> st_db {0,0 ,Initialization::Uninitialized};
-
-         size_t t = 0; //Ist nur ein size_t aber eigentlich benötigt nicht jedes Adam Objekt ein eigenes
-
-}
+    const Config config;
+    State weights;
+    State bias;
+    size_t t = 0;
+};

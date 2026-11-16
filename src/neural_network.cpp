@@ -1,3 +1,5 @@
+#pragma once
+
 //
 #include "neural_network.hpp"
 #include "matrix/matrix.hpp"
@@ -41,11 +43,11 @@ void NeuralNetwork<Optimizer>::backward(const Matrix<Layout::ColumnMajor>& input
         auto loss_gradient = loss_->backward(y_hat, y);
         gradient = softmax::backward(loss_gradient, y, y_hat);
     }
-    gradient = Layers[Layers.size() - 1].backward(gradient, Layers[Layers.size() - 2].a, learning_rate);
+    gradient = Layers[Layers.size() - 1].backward(gradient, Layers[Layers.size() - 2].a);
     for (size_t i=Layers.size() - 2; i > 0; i--){
-        gradient = Layers[i].backward(gradient, *activation_, Layers[i-1].a, learning_rate);
+        gradient = Layers[i].backward(gradient, *activation_, Layers[i-1].a);
     }
-    Layers[0].backward(learning_rate, gradient, *activation_, input);
+    Layers[0].backward(gradient, *activation_, input);
 }
 
 template<class Optimizer>
