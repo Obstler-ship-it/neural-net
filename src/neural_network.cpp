@@ -25,19 +25,20 @@ float NeuralNetwork<Optimizer>::forward(const Matrix<Layout::ColumnMajor>& input
         else
             Layers[i].forward(previous);
     }
-    softmax::forward(Layers.back().a);
+    probabilities = Layers.back().a;
+    softmax::forward(probabilities);
 
     if (mod == Mode::train or mod == Mode::test)
-        return loss_->forward(Layers.back().a, y);
+        return loss_->forward(probabilities, y);
     else if (mod == Mode::test_full)
-        return ARG_MAX::count(Layers.back().a, y, number_labels);
+        return ARG_MAX::count(probabilities, y, number_labels);
     else
         throw std::logic_error("Gibt keinen Mode!");
 }
 
 template<class Optimizer>
 void NeuralNetwork<Optimizer>::backward(const Matrix<Layout::ColumnMajor>& input, const std::vector<int>& y){
-    auto& y_hat = Layers.back().a;
+    const auto& y_hat = probabilities;
     Matrix<Layout::ColumnMajor> gradient = y_hat;
     if (loss_type == LossType::CrossEntropy) {
         for (size_t column = 0; column < y.size(); ++column) {
