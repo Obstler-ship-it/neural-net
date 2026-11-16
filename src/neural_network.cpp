@@ -82,7 +82,7 @@ void NeuralNetwork<Optimizer>::train(
     size_t epoch = 0;
     float precision = 0;
     float best_precision = -1.0f;
-    int epochs_without_improvement = 0;
+    int no_improvement = 0;
 
     do{
         ++epoch;
@@ -126,16 +126,18 @@ void NeuralNetwork<Optimizer>::train(
         auto[validation_precision, ms, size] = test_run(validation_data, validation_labels);
         precision = validation_precision;
 
-        std::println("Epoch {} Validation:, precision {:.4f}, forward {:.1f}, digits {}",
-            epoch, precision, ms, size);
-
-        if (precision > best_precision + 0.001f)
+        if (precision > best_precision + 0.001f) {
             best_precision = precision;
+        }
         else
-            ++epochs_without_improvement;
+            ++no_improvement;
 
-    } while (epochs_without_improvement <= 3);
+        std::println("Epoch {} validation:, precision {:.4f}, forward {:.1f}, no_improvements {}, digits {}",
+            epoch, precision, ms, no_improvement, size);
 
+    } while (no_improvement <= epochs_without_improvement);
+
+    std::println("Training finished after {} epochs ({} total samples).", epoch, count);
 }
 
 template<class Optimizer>

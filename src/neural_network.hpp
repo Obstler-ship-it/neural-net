@@ -43,10 +43,16 @@ template<class OptimizerType>
 class NeuralNetwork{
     public:
 
-        NeuralNetwork(size_t input_size, size_t batch_size=64)
-        : number_labels(0), batch_size(batch_size), loss_type(LossType::CrossEntropy),
-          current_size(input_size), loss_(std::make_unique<CrossEntropy>()) {
-            if (input_size == 0 || batch_size == 0)
+        // @Param input_size, batch_size, epoch_without_improvement
+        NeuralNetwork(size_t input_size, size_t batch_size=64, int epochs_without_improvement=2)
+        : number_labels(0), batch_size(batch_size),
+          epochs_without_improvement(epochs_without_improvement),
+          loss_type(LossType::CrossEntropy),
+          current_size(input_size),
+          loss_(std::make_unique<CrossEntropy>()) {
+            if (!(1 <= epochs_without_improvement))
+                throw std::invalid_argument("Epochen-Anzahl ohne Verbesserung muss <= 1 sein");
+            if (input_size == 0 || batch_size == 0 )
                 throw std::invalid_argument("Eingabe- und Batchgroesse muessen positiv sein");
         }
 
@@ -149,6 +155,7 @@ class NeuralNetwork{
         LossType loss_type;
         size_t current_size;
 
+        int epochs_without_improvement;
         bool trained = false;
 
         // Gibt den Loss vom Batch an
