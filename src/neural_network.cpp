@@ -16,11 +16,15 @@
 
 template<class Optimizer>
 float NeuralNetwork<Optimizer>::forward(const Matrix<Layout::ColumnMajor>& input, const std::vector<int>& y, Mode mod){
-    Layers[0].forward(input, *activation_);
-    for (size_t i=1; i < Layers.size() - 1; i++){
-        Layers[i].forward(Layers[i-1].a, *activation_);
+    if (Layers.empty())
+        throw std::logic_error("Netz benoetigt mindestens einen Dense-Layer");
+    for (size_t i=0; i < Layers.size(); ++i) {
+        const auto& previous = i == 0 ? input : Layers[i-1].a;
+        if (activations[i])
+            Layers[i].forward(previous, *activations[i]);
+        else
+            Layers[i].forward(previous);
     }
-    Layers[Layers.size() - 1].forward(Layers[Layers.size() - 2].a);
     softmax::forward(Layers.back().a);
 
     if (mod == Mode::train or mod == Mode::test)
@@ -43,23 +47,33 @@ void NeuralNetwork<Optimizer>::backward(const Matrix<Layout::ColumnMajor>& input
         auto loss_gradient = loss_->backward(y_hat, y);
         gradient = softmax::backward(loss_gradient, y, y_hat);
     }
-    gradient = Layers[Layers.size() - 1].backward(gradient, Layers[Layers.size() - 2].a);
-    for (size_t i=Layers.size() - 2; i > 0; i--){
-        gradient = Layers[i].backward(gradient, *activation_, Layers[i-1].a);
+    for (size_t i=Layers.size(); i > 1; --i) {
+        const size_t index = i - 1;
+        if (activations[index])
+            gradient = Layers[index].backward(gradient, *activations[index], Layers[index-1].a);
+        else
+            gradient = Layers[index].backward(gradient, Layers[index-1].a);
     }
-    Layers[0].backward(gradient, *activation_, input);
+    if (activations[0])
+        Layers[0].backward(gradient, input, *activations[0]);
+    else
+        Layers[0].backward(gradient, input);
 }
 
 template<class Optimizer>
-void NeuralNetwork<Optimizer>::train(const std::vector<std::vector<float>>& train_data,
-                                     const std::vector<int>& train_labels,
-                                     const std::vector<std::vector<float>>& validation_data,
-                                     const std::vector<int>& validation_labels){
+void NeuralNetwork<Optimizer>::train(
+    const std::vector<std::vector<float>>& train_data,
+    const std::vector<int>& train_labels,
+    const std::vector<std::vector<float>>& validation_data,
+    const std::vector<int>& validation_labels)
+{
 
     if (train_labels.size() != train_data.size())
         throw std::invalid_argument("Unterschiedliche Anzahl Labels und Datensätze");
     if (train_data.empty() || batch_size == 0 || train_data.size() < batch_size)
         throw std::invalid_argument("Datensatz ist leer oder kleiner als ein Batch");
+    if (Layers.empty())
+        throw std::logic_error("Netz benoetigt mindestens einen Dense-Layer");
 
     std::vector<size_t> indizes(train_data.size());
     std::iota(indizes.begin(), indizes.end(), 0);
@@ -152,5 +166,5 @@ test_result NeuralNetwork<Optimizer>::test_run(const std::vector<std::vector<flo
 template<class Optimizer>
 void NeuralNetwork<Optimizer>::test(const std::vector<std::vector<float>>& data, const std::vector<int>& y){
     auto[precision, ms, size] = test_run(data, y);
-    std::println("Genauigkeit: {:.2f}% in {}ms für {} Ziffern", precision * 100, ms, size);
+    std::println("Precission: {:.2f}% in {}ms for {} Digits", precision * 100, ms, size);
 }

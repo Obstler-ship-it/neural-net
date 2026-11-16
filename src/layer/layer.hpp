@@ -25,6 +25,11 @@ class Layer{
         //Enthält die Ausgabe nach der Layer und Aktivierungsfunktion
         Matrix<Layout::ColumnMajor> a; //public
 
+        void rescale_for(const ActivationFunction& activation_function) {
+            W *= activation_function.scale(input_size, output_size)
+                / std::sqrt(6.0f / static_cast<float>(input_size));
+        }
+
     private:
         size_t input_size;
         size_t output_size;

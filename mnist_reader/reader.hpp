@@ -1,5 +1,6 @@
 // Reader zum einlesen des MNIST Datensatzes
 #include <vector>
+#include <utility>
 
 struct MnistDataset {
     std::vector<std::vector<float>> images;
@@ -9,3 +10,5 @@ struct MnistDataset {
 MnistDataset get_training_data();
 
 MnistDataset get_test_data();
+
+std::pair<MnistDataset, MnistDataset> split_dataset(MnistDataset dataset);

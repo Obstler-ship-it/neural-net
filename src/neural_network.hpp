@@ -12,7 +12,10 @@
 #include <cstddef>
 #include <memory>
 #include <stdexcept>
+#include <type_traits>
 #include <vector>
+
+struct Dense {};
 
 enum class LossType{
     MeanSquareError,
@@ -40,12 +43,54 @@ template<class OptimizerType>
 class NeuralNetwork{
     public:
 
+        NeuralNetwork(size_t input_size, size_t batch_size=64)
+        : number_labels(0), batch_size(batch_size), loss_type(LossType::CrossEntropy),
+          current_size(input_size), loss_(std::make_unique<CrossEntropy>()) {
+            if (input_size == 0 || batch_size == 0)
+                throw std::invalid_argument("Eingabe- und Batchgroesse muessen positiv sein");
+        }
+
+        template<class Component>
+        void add(size_t output_size) {
+            static_assert(std::is_same_v<Component, Dense>, "Nur Dense hat eine Groessenangabe");
+            if (output_size == 0)
+                throw std::invalid_argument("Layergroesse muss positiv sein");
+            ReLU default_activation;
+            Layers.emplace_back(current_size, output_size, batch_size, default_activation);
+            activations.push_back(nullptr);
+            current_size = output_size;
+            number_labels = output_size;
+        }
+
+        template<class Component>
+        void add() {
+            static_assert(std::is_same_v<Component, ReLU> || std::is_same_v<Component, Sigmoid>,
+                          "Aktivierungsfunktion muss ReLU oder Sigmoid sein");
+            if (Layers.empty() || activations.back())
+                throw std::logic_error("Aktivierung benoetigt einen Dense-Layer ohne Aktivierung");
+            auto activation = std::make_unique<Component>();
+            Layers.back().rescale_for(*activation);
+            activations.back() = std::move(activation);
+        }
+
+        template<class Loss>
+        void set_loss() {
+            static_assert(std::is_same_v<Loss, CrossEntropy> || std::is_same_v<Loss, MeanSquareError>,
+                          "Loss muss CrossEntropy oder MeanSquareError sein");
+            loss_ = std::make_unique<Loss>();
+            if constexpr (std::is_same_v<Loss, CrossEntropy>)
+                loss_type = LossType::CrossEntropy;
+            else
+                loss_type = LossType::MeanSquareError;
+        }
+
         NeuralNetwork(std::vector<std::size_t> layer_sizes,
             size_t number_labels,
             ActivationType activation,
             LossType loss,
             size_t batch_size=64)
-        : number_labels(number_labels), batch_size(batch_size), loss_type(loss) {
+        : number_labels(number_labels), batch_size(batch_size), loss_type(loss),
+          current_size(layer_sizes.empty() ? 0 : layer_sizes.front()) {
 
             if (layer_sizes.size() < 3)
                 throw std::invalid_argument("Es muss mindestens 3 Layer geben");
@@ -67,6 +112,14 @@ class NeuralNetwork{
             Layers.reserve(layer_sizes.size());
             for (size_t index=1; index < layer_sizes.size(); index++){
                 Layers.emplace_back(layer_sizes[index - 1], layer_sizes[index], batch_size, *activation_);
+                if (index + 1 < layer_sizes.size()) {
+                    if (activation == ActivationType::ReLU)
+                        activations.push_back(std::make_unique<ReLU>());
+                    else
+                        activations.push_back(std::make_unique<Sigmoid>());
+                } else {
+                    activations.push_back(nullptr);
+                }
             }
 
         }
@@ -87,12 +140,14 @@ class NeuralNetwork{
     private:
 
         std::vector<Layer<OptimizerType>> Layers;
+        std::vector<std::unique_ptr<ActivationFunction>> activations;
 
         std::unique_ptr<ActivationFunction> activation_;
         std::unique_ptr<LossFunction> loss_;
-        const size_t number_labels;
+        size_t number_labels;
         const size_t batch_size;
-        const LossType loss_type;
+        LossType loss_type;
+        size_t current_size;
 
         bool trained = false;
 

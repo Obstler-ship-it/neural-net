@@ -28,6 +28,6 @@ class Sigmoid: public ActivationFunction {
 
         //Xavier-/ Glorot-Initialisierung
         float scale(size_t in, size_t out) const override{
-            return std::sqrt(6/(in + out));
+            return std::sqrt(6.0f / static_cast<float>(in + out));
         }
 };

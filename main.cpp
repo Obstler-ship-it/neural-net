@@ -4,56 +4,37 @@
 #include "src/optimizers/adam.hpp"
 #include "src/optimizers/sgd.hpp"
 #include "src/optimizers/momentum.hpp"
-#include <numeric>
-#include <random>
-#include <vector>
-
-struct Dataset{
-    std::vector<std::vector<float>> data;
-    std::vector<int> labels;
-};
-
-std::pair<Dataset, Dataset> split(Dataset dataset){
-    std::vector<size_t> indices(dataset.data.size());
-    std::iota(indices.begin(), indices.end(), 0);
-
-    std::shuffle(indices.begin(), indices.end(), random_generator());
-    const size_t split = indices.size() * 9 / 10;
-
-    Dataset train;
-    Dataset valid;
-
-    for (size_t position = 0; position < indices.size(); ++position) {
-        const size_t index = indices[position];
-        if (position < split) {
-            train.data.push_back(std::move(dataset.data[index]));
-            train.labels.push_back(dataset.labels[index]);
-        } else {
-            valid.data.push_back(std::move(dataset.data[index]));
-            valid.labels.push_back(dataset.labels[index]);
-        }
-    }
-
-    return {std::move(train), std::move(valid)};
-}
+#include "src/optimizers/rms_prop.hpp"
+#include <chrono>
+#include <print>
 
 void start(){
-    const size_t seed = 163;
+    const size_t seed = 19751979;
     set_random_seed(seed);
 
-    auto [images, labels] = get_training_data();
+    NeuralNetwork<Momentum> net(784, 64); //Optimizers Adam, SGD, Momentum, RMSprop
+    net.add<Dense>(128);
+    net.add<ReLU>();
+    net.add<Dense>(32);
+    net.add<ReLU>();
+    net.add<Dense>(10);
+    net.set_loss<CrossEntropy>();
 
-    NeuralNetwork<Adam> net({784, 128, 32, 10}, 10, ActivationType::ReLU, LossType::CrossEntropy, 64);
-    auto [train, valid] = split(Dataset{std::move(images), std::move(labels)});
-    net.train(train.data, train.labels, valid.data, valid.labels);
+    auto [train, valid] = split_dataset(get_training_data());
+    net.train(train.images, train.labels, valid.images, valid.labels);
 
     auto [input_test, labels_test] = get_test_data();
     net.test(input_test, labels_test);
-    return;
 }
 
 int main(){
+    const auto start_time = std::chrono::steady_clock::now();
+    std::println("Started ...");
     start();
+    const auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::steady_clock::now() - start_time).count();
+    std::println("Time {}m{}.{:03}s", elapsed / 60000,
+                 (elapsed / 1000) % 60, elapsed % 1000);
     return 0;
 }
 

@@ -1,8 +1,11 @@
 // Hat Codex geschrieben
 #include "reader.hpp"
+#include "../src/matrix/matrix.hpp"
 
+#include <algorithm>
 #include <cstdint>
 #include <fstream>
+#include <numeric>
 #include <stdexcept>
 #include <string>
 #include <utility>
@@ -97,4 +100,27 @@ MnistDataset get_test_data() {
     return load_dataset(
         MNIST_DATA_DIR "/t10k-images.idx3-ubyte",
         MNIST_DATA_DIR "/t10k-labels.idx1-ubyte");
+}
+
+std::pair<MnistDataset, MnistDataset> split_dataset(MnistDataset dataset) {
+    std::vector<size_t> indices(dataset.images.size());
+    std::iota(indices.begin(), indices.end(), 0);
+    std::shuffle(indices.begin(), indices.end(), random_generator());
+    const size_t split = indices.size() * 9 / 10;
+
+    MnistDataset train;
+    MnistDataset valid;
+    train.images.reserve(split);
+    train.labels.reserve(split);
+    valid.images.reserve(indices.size() - split);
+    valid.labels.reserve(indices.size() - split);
+
+    for (size_t position = 0; position < indices.size(); ++position) {
+        const size_t index = indices[position];
+        auto& target = position < split ? train : valid;
+        target.images.push_back(std::move(dataset.images[index]));
+        target.labels.push_back(dataset.labels[index]);
+    }
+
+    return {std::move(train), std::move(valid)};
 }
