@@ -30,6 +30,12 @@ enum class Mode{
     test
 };
 
+struct test_result{
+    float precision;
+    float time;
+    size_t size;
+};
+
 template<class OptimizerType>
 class NeuralNetwork{
     public:
@@ -66,7 +72,10 @@ class NeuralNetwork{
         }
 
         //trainiert das Neuronale Netz
-        void train(const std::vector<std::vector<float>>&, const std::vector<int>&);
+        void train(const std::vector<std::vector<float>>& train_data,
+                   const std::vector<int>& train_labels,
+                   const std::vector<std::vector<float>>& validation_data,
+                   const std::vector<int>& validation_labels);
 
         // Bestimmt den Loss auf dem Testdatensatz
         void test(const std::vector<std::vector<float>>&, const std::vector<int>&);
@@ -92,6 +101,9 @@ class NeuralNetwork{
 
         // Berechnet die Ableitungen und passt die Gewichte an
         void backward(const Matrix<Layout::ColumnMajor>& input, const std::vector<int>& labels);
+
+        // Berechnet einen Forward und misst dabei die precision und Zeit
+        test_result test_run(const std::vector<std::vector<float>>& data, const std::vector<int>& y);
 };
 
 #include "neural_network.cpp"

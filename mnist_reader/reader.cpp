@@ -82,8 +82,7 @@ MnistDataset load_dataset(
         label = static_cast<int>(value);
     }
 
-    return {std::move(images), std::move(labels),
-            static_cast<std::size_t>(rows), static_cast<std::size_t>(columns)};
+    return {std::move(images), std::move(labels)};
 }
 
 } // namespace

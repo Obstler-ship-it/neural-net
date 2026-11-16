@@ -1,19 +1,53 @@
+#include "matrix/matrix.cpp"
 #include "mnist_reader/reader.hpp"
 #include "src/neural_network.hpp"
 #include "src/optimizers/adam.hpp"
 #include "src/optimizers/sgd.hpp"
 #include "src/optimizers/momentum.hpp"
+#include <numeric>
+#include <random>
+#include <vector>
+
+struct Dataset{
+    std::vector<std::vector<float>> data;
+    std::vector<int> labels;
+};
+
+std::pair<Dataset, Dataset> split(Dataset dataset){
+    std::vector<size_t> indices(dataset.data.size());
+    std::iota(indices.begin(), indices.end(), 0);
+
+    std::shuffle(indices.begin(), indices.end(), random_generator());
+    const size_t split = indices.size() * 9 / 10;
+
+    Dataset train;
+    Dataset valid;
+
+    for (size_t position = 0; position < indices.size(); ++position) {
+        const size_t index = indices[position];
+        if (position < split) {
+            train.data.push_back(std::move(dataset.data[index]));
+            train.labels.push_back(dataset.labels[index]);
+        } else {
+            valid.data.push_back(std::move(dataset.data[index]));
+            valid.labels.push_back(dataset.labels[index]);
+        }
+    }
+
+    return {std::move(train), std::move(valid)};
+}
 
 void start(){
     const size_t seed = 163;
     set_random_seed(seed);
 
-    auto [input_train, labels_train, train_rows, train_columns] = get_training_data();
+    auto [images, labels] = get_training_data();
 
-    NeuralNetwork<SGD> net({784, 128, 32, 10}, 10, ActivationType::ReLU, LossType::CrossEntropy, 64);
-    net.train(input_train, labels_train);
+    NeuralNetwork<Adam> net({784, 128, 32, 10}, 10, ActivationType::ReLU, LossType::CrossEntropy, 64);
+    auto [train, valid] = split(Dataset{std::move(images), std::move(labels)});
+    net.train(train.data, train.labels, valid.data, valid.labels);
 
-    auto [input_test, labels_test, test_rows, test_columns] = get_test_data();
+    auto [input_test, labels_test] = get_test_data();
     net.test(input_test, labels_test);
     return;
 }

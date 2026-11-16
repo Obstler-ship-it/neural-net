@@ -51,29 +51,35 @@ void NeuralNetwork<Optimizer>::backward(const Matrix<Layout::ColumnMajor>& input
 }
 
 template<class Optimizer>
-void NeuralNetwork<Optimizer>::train(const std::vector<std::vector<float>>& data, const std::vector<int>& labels){
+void NeuralNetwork<Optimizer>::train(const std::vector<std::vector<float>>& train_data,
+                                     const std::vector<int>& train_labels,
+                                     const std::vector<std::vector<float>>& validation_data,
+                                     const std::vector<int>& validation_labels){
 
-    if (labels.size() != data.size())
+    if (train_labels.size() != train_data.size())
         throw std::invalid_argument("Unterschiedliche Anzahl Labels und Datensätze");
-    if (data.empty() || batch_size == 0 || data.size() < batch_size)
+    if (train_data.empty() || batch_size == 0 || train_data.size() < batch_size)
         throw std::invalid_argument("Datensatz ist leer oder kleiner als ein Batch");
 
-    std::vector<size_t> indizes(data.size());
+    std::vector<size_t> indizes(train_data.size());
     std::iota(indizes.begin(), indizes.end(), 0);
-    size_t rows = data[0].size();
+    size_t rows = train_data[0].size();
     size_t count = 0;
     size_t epoch = 0;
+    float precision = 0;
+    float best_precision = -1.0f;
+    int epochs_without_improvement = 0;
 
     do{
         ++epoch;
         std::shuffle(indizes.begin(), indizes.end(), random_generator());
         size_t count_loss = 0;
-        float loss = 1;
+        float loss = 0;
         double batch_build_ms = 0.0;
         double forward_ms = 0.0;
         double backward_ms = 0.0;
 
-        for (size_t i=0; i + batch_size <= data.size() && count < 8000 * 64; i += batch_size) {
+        for (size_t i=0; i + batch_size <= train_data.size(); i += batch_size) {
 
             const auto batch_start = std::chrono::steady_clock::now();
             count += batch_size;
@@ -83,8 +89,8 @@ void NeuralNetwork<Optimizer>::train(const std::vector<std::vector<float>>& data
 
             for (size_t j=0; j < batch_size; ++j) {
                 size_t idx = indizes[i+j];
-                y[j] = labels[idx];
-                input.data.insert(input.data.end(), data[idx].begin(), data[idx].end());
+                y[j] = train_labels[idx];
+                input.data.insert(input.data.end(), train_data[idx].begin(), train_data[idx].end());
             }
             const auto batch_end = std::chrono::steady_clock::now();
             batch_build_ms += std::chrono::duration<double, std::milli>(batch_end - batch_start).count();
@@ -93,9 +99,6 @@ void NeuralNetwork<Optimizer>::train(const std::vector<std::vector<float>>& data
             loss +=  forward(input, y, Mode::train) / batch_size;
             const auto forward_end = std::chrono::steady_clock::now();
             forward_ms += std::chrono::duration<double, std::milli>(forward_end - forward_start).count();
-
-            // if (!std::isfinite(loss))
-            //     throw std::runtime_error("Loss ist nicht endlich");
 
             const auto backward_start = std::chrono::steady_clock::now();
             backward(input, y);
@@ -106,12 +109,23 @@ void NeuralNetwork<Optimizer>::train(const std::vector<std::vector<float>>& data
         std::println("Epoch {} timing [ms]: batch {:.1f}, forward {:.1f}, backward {:.1f}; digits {}, loss {:.3f}",
             epoch, batch_build_ms, forward_ms, backward_ms, batch_size * count_loss, loss/count_loss);
 
-    } while (count < 8000 * 64);
+        auto[validation_precision, ms, size] = test_run(validation_data, validation_labels);
+        precision = validation_precision;
+
+        std::println("Epoch {} Validation:, precision {:.4f}, forward {:.1f}, digits {}",
+            epoch, precision, ms, size);
+
+        if (precision > best_precision + 0.001f)
+            best_precision = precision;
+        else
+            ++epochs_without_improvement;
+
+    } while (epochs_without_improvement <= 3);
 
 }
 
 template<class Optimizer>
-void NeuralNetwork<Optimizer>::test(const std::vector<std::vector<float>>& data, const std::vector<int>& y){
+test_result NeuralNetwork<Optimizer>::test_run(const std::vector<std::vector<float>>& data, const std::vector<int>& y){
 
     if (y.size() != data.size())
         throw std::invalid_argument("Unterschiedliche Anzahl Labels und Datensätze");
@@ -131,5 +145,12 @@ void NeuralNetwork<Optimizer>::test(const std::vector<std::vector<float>>& data,
 
     const auto test_end = std::chrono::steady_clock::now();
     auto ms = std::chrono::duration<float, std::milli>(test_end - test_start).count();
-    std::println("Genauigkeit: {:.2f}% in {}ms für {} Ziffern", precision * 100, ms, y.size());
+
+    return test_result(precision, ms, y.size());
+}
+
+template<class Optimizer>
+void NeuralNetwork<Optimizer>::test(const std::vector<std::vector<float>>& data, const std::vector<int>& y){
+    auto[precision, ms, size] = test_run(data, y);
+    std::println("Genauigkeit: {:.2f}% in {}ms für {} Ziffern", precision * 100, ms, size);
 }
