@@ -1,6 +1,9 @@
 #include "mnist_reader/reader.hpp"
 #include "src/neural_network.hpp"
 #include "src/optimizers/momentum.hpp"
+#include "src/optimizers/adam.hpp"
+#include "src/optimizers/sgd.hpp"
+#include "src/optimizers/rms_prop.hpp"
 #include <chrono>
 #include <print>
 
