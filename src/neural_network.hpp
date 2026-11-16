@@ -44,11 +44,12 @@ class NeuralNetwork{
     public:
 
         // @Param input_size, batch_size, epoch_without_improvement
-        NeuralNetwork(size_t input_size, size_t batch_size=64, int epochs_without_improvement=2)
+        NeuralNetwork(size_t input_size, size_t batch_size=64, int epochs_without_improvement=2,
+                      const typename OptimizerType::Config& optimizer_config = {})
         : number_labels(0), batch_size(batch_size),
           epochs_without_improvement(epochs_without_improvement),
           loss_type(LossType::CrossEntropy),
-          current_size(input_size),
+          input_size(input_size), current_size(input_size), optimizer_config(optimizer_config),
           loss_(std::make_unique<CrossEntropy>()) {
             if (!(1 <= epochs_without_improvement))
                 throw std::invalid_argument("Epochen-Anzahl ohne Verbesserung muss <= 1 sein");
@@ -62,7 +63,7 @@ class NeuralNetwork{
             if (output_size == 0)
                 throw std::invalid_argument("Layergroesse muss positiv sein");
             ReLU default_activation;
-            Layers.emplace_back(current_size, output_size, batch_size, default_activation);
+            Layers.emplace_back(current_size, output_size, batch_size, default_activation, optimizer_config);
             activations.push_back(nullptr);
             current_size = output_size;
             number_labels = output_size;
@@ -94,12 +95,18 @@ class NeuralNetwork{
             size_t number_labels,
             ActivationType activation,
             LossType loss,
-            size_t batch_size=64)
+            size_t batch_size=64,
+            const typename OptimizerType::Config& optimizer_config = {})
         : number_labels(number_labels), batch_size(batch_size), loss_type(loss),
-          current_size(layer_sizes.empty() ? 0 : layer_sizes.front()) {
+          input_size(layer_sizes.empty() ? 0 : layer_sizes.front()),
+          current_size(layer_sizes.empty() ? 0 : layer_sizes.front()),
+          optimizer_config(optimizer_config) {
 
             if (layer_sizes.size() < 3)
                 throw std::invalid_argument("Es muss mindestens 3 Layer geben");
+            if (batch_size == 0 || layer_sizes.front() == 0 ||
+                layer_sizes.back() != number_labels || number_labels == 0)
+                throw std::invalid_argument("Ungueltige Layer-, Batch- oder Labelgroesse");
 
             if (activation == ActivationType::ReLU)
                 activation_ = std::make_unique<ReLU>();
@@ -117,7 +124,7 @@ class NeuralNetwork{
 
             Layers.reserve(layer_sizes.size());
             for (size_t index=1; index < layer_sizes.size(); index++){
-                Layers.emplace_back(layer_sizes[index - 1], layer_sizes[index], batch_size, *activation_);
+                Layers.emplace_back(layer_sizes[index - 1], layer_sizes[index], batch_size, *activation_, optimizer_config);
                 if (index + 1 < layer_sizes.size()) {
                     if (activation == ActivationType::ReLU)
                         activations.push_back(std::make_unique<ReLU>());
@@ -153,7 +160,9 @@ class NeuralNetwork{
         size_t number_labels;
         const size_t batch_size;
         LossType loss_type;
+        size_t input_size;
         size_t current_size;
+        typename OptimizerType::Config optimizer_config;
 
         int epochs_without_improvement;
         bool trained = false;

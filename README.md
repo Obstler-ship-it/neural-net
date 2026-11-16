@@ -1,6 +1,6 @@
 # MNIST Neural Network in C++
 
-A small neural network that recognizes handwritten digits from the [MNIST dataset](https://learn.microsoft.com/en-us/azure/open-datasets/dataset-mnist). It is written from scratch in C++ using only stdlib and includes matrix operations, dense layers, activation functions, optimizers, validation, and a training loop.
+A small neural network that recognizes handwritten digits from the [MNIST dataset](https://learn.microsoft.com/en-us/azure/open-datasets/dataset-mnist). It is written from scratch in C++ using only libstdc++ and includes matrix operations, dense layers, activation functions, optimizers, validation, and a training loop.
 
 The current example builds a dense network with ReLU activations and Momentum, trains on a shuffled 90% training split, uses the remaining 10% for validation, and reports accuracy on MNIST's separate test set.
 
@@ -61,7 +61,7 @@ bash start.sh
 Choose an optimizer as the network's template argument, provide the input width and batch size, then add dense layers and activations in order:
 
 ```cpp
-NeuralNetwork<Momentum> net(784, 64);
+NeuralNetwork<SGD> net(784, 64, 3, SGD::Config{.learning_rate=0.075f});
 net.add<Dense>(128);
 net.add<ReLU>();
 net.add<Dense>(32);
@@ -77,10 +77,8 @@ const auto [test_images, test_labels] = get_test_data();
 net.test(test_images, test_labels);
 ```
 
-Available optimizers are `Adam`, `SGD`, `Momentum`, and `RMSprop`. Available activations are `ReLU` and `Sigmoid`; available losses are `CrossEntropy` and `MeanSquareError`. Softmax is applied automatically at the output. The optimizer uses its default configuration in the current network API.
-
-The older constructor taking a list of layer widths, `ActivationType`, and `LossType` remains available.
+Available optimizers are `Adam`, `SGD`, `Momentum`, and `RMSprop`. Available activations are `ReLU` and `Sigmoid`; available losses are `CrossEntropy` and `MeanSquareError`. Softmax is applied automatically at the output. To pass optimizer settings, use the fourth constructor argument, for example `NeuralNetwork<Momentum> net(784, 64, 3, Momentum::Config{.learning_rate = 0.01f, .momentum = 0.9f});`.
 
 ## TODO
 
--Implementing some kind of print for the Digits in the MNIST Dataset.
+-Implementing some kind of print/visualisation for the digitclassification.

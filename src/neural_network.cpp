@@ -71,7 +71,23 @@ void NeuralNetwork<Optimizer>::train(
     if (train_labels.size() != train_data.size())
         throw std::invalid_argument("Unterschiedliche Anzahl Labels und Datensätze");
     if (train_data.empty() || batch_size == 0 || train_data.size() < batch_size)
-        throw std::invalid_argument("Datensatz ist leer oder kleiner als ein Batch");
+        throw std::invalid_argument("Trainingsdaten sind leer oder kleiner als ein Batch");
+    if (validation_data.empty() || validation_data.size() != validation_labels.size())
+        throw std::invalid_argument("Validierungsdaten sind leer oder passen nicht zu den Labels");
+    if (train_data.front().size() != input_size)
+        throw std::invalid_argument("Trainingsbilder haben die falsche Eingabegroesse");
+    for (const auto& image : train_data)
+        if (image.size() != input_size)
+            throw std::invalid_argument("Trainingsbilder haben unterschiedliche Groessen");
+    for (const auto& image : validation_data)
+        if (image.size() != input_size)
+            throw std::invalid_argument("Validierungsbilder haben falsche Groessen");
+    for (int label : train_labels)
+        if (label < 0 || static_cast<size_t>(label) >= number_labels)
+            throw std::invalid_argument("Trainingslabel ausserhalb des Ausgabebereichs");
+    for (int label : validation_labels)
+        if (label < 0 || static_cast<size_t>(label) >= number_labels)
+            throw std::invalid_argument("Validierungslabel ausserhalb des Ausgabebereichs");
     if (Layers.empty())
         throw std::logic_error("Netz benoetigt mindestens einen Dense-Layer");
 
@@ -147,6 +163,14 @@ test_result NeuralNetwork<Optimizer>::test_run(const std::vector<std::vector<flo
         throw std::invalid_argument("Unterschiedliche Anzahl Labels und Datensätze");
     if (data.empty())
         throw std::invalid_argument("Datensatz ist leer");
+    if (data.front().size() != input_size)
+        throw std::invalid_argument("Bilder haben die falsche Eingabegroesse");
+    for (const auto& image : data)
+        if (image.size() != input_size)
+            throw std::invalid_argument("Bilder haben unterschiedliche Groessen");
+    for (int label : y)
+        if (label < 0 || static_cast<size_t>(label) >= number_labels)
+            throw std::invalid_argument("Label ausserhalb des Ausgabebereichs");
 
     const auto test_start = std::chrono::steady_clock::now();
 
