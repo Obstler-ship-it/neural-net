@@ -2,7 +2,7 @@
 
 A small neural network that recognizes handwritten digits from the [MNIST dataset](https://learn.microsoft.com/en-us/azure/open-datasets/dataset-mnist). It is written from scratch in C++ using only libstdc++ and includes matrix operations, dense layers, activation functions, optimizers, validation, and a training loop.
 
-The current example builds a dense network with ReLU activations and Momentum, trains on a shuffled 90% training split, uses the remaining 10% for validation, and reports accuracy on MNIST's separate test set.
+The current example builds a dense network with ReLU activations and Momentum, trains on a shuffled 90% training split, uses the remaining 10% for validation, and reports `~97-98%`accuracy on MNIST's separate test set.
 
 ## Requirements
 
