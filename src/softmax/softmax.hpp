@@ -4,6 +4,7 @@
 #include <cmath>
 #include <cstddef>
 #include <vector>
+#include <stdexcept>
 
 namespace softmax{
 
@@ -11,7 +12,7 @@ namespace softmax{
     void forward(Matrix<Layout::ColumnMajor>& z);
 
     // Multiplikation nach der Kettenregel mit der entsprechenden Ableitung
-    Matrix<Layout::ColumnMajor> backward(Matrix<Layout::ColumnMajor>& dL, const std::vector<int>& y, const Matrix<Layout::ColumnMajor>& y_hat);
+    Matrix<Layout::ColumnMajor> backward(const Matrix<Layout::ColumnMajor>& dL, const Matrix<Layout::ColumnMajor>& y_hat);
 };
 
 
@@ -38,16 +39,18 @@ inline void softmax::forward(Matrix<Layout::ColumnMajor>& z){
 
 }
 
-inline Matrix<Layout::ColumnMajor> softmax::backward(Matrix<Layout::ColumnMajor>& dL, const std::vector<int>& y, const Matrix<Layout::ColumnMajor>& y_hat){
+inline Matrix<Layout::ColumnMajor> softmax::backward(
+    const Matrix<Layout::ColumnMajor>& dL, const Matrix<Layout::ColumnMajor>& y_hat) {
+    if (dL.rows != y_hat.rows || dL.columns != y_hat.columns)
+        throw std::invalid_argument("Softmax: gradient and prediction dimensions differ");
 
     Matrix<Layout::ColumnMajor> dz(y_hat.rows, y_hat.columns, Initialization::Zero);
-
-    for (size_t i=0; i < dz.columns; i++){
-        for (size_t j=0; j < dz.rows; j++){
-            dz(j,i) = dL(0,i) * -y_hat(j,i) * y_hat(y[i],i);
-        }
-        dz(y[i], i) = dL(0, i) * y_hat(y[i],i) * (1-y_hat(y[i],i));
+    for (size_t column = 0; column < y_hat.columns; ++column) {
+        float dot = 0.0f;
+        for (size_t row = 0; row < y_hat.rows; ++row)
+            dot += dL(row, column) * y_hat(row, column);
+        for (size_t row = 0; row < y_hat.rows; ++row)
+            dz(row, column) = y_hat(row, column) * (dL(row, column) - dot);
     }
-
     return dz;
 }

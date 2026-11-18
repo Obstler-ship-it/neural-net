@@ -9,7 +9,7 @@
 template<class OptimizerType>
 class Layer{
     public:
-        Layer(size_t input_size, size_t output_size, uint batch_size, const ActivationFunction& activation_function,
+        Layer(size_t input_size, size_t output_size, uint batch_size,
               const typename OptimizerType::Config& optimizer_config = {})
         : input_size(input_size),
           output_size(output_size),
@@ -19,10 +19,7 @@ class Layer{
           b(output_size, 1, Initialization::Zero),
           db(output_size, 1, Initialization::Uninitialized),
           dW(output_size, input_size, Initialization::Uninitialized),
-          optimizer(optimizer_config) {
-            //initialisierung abhängig von der Aktivierungsfunktion
-            W *= activation_function.scale(input_size, output_size);
-        }
+          optimizer(optimizer_config) {}
 
         //Enthält die Ausgabe nach der Layer und Aktivierungsfunktion
         Matrix<Layout::ColumnMajor> a; //public

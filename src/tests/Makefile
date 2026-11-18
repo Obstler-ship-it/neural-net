@@ -32,3 +32,11 @@ adam-test: build/adam_test
 build/adam_test: src/tests/adam_test.cpp src/optimizers/adam.hpp $(MATRIX_SOURCE)
 	mkdir -p build
 	$(CXX) $(CXXFLAGS) -O2 $< -o $@
+
+.PHONY: loss-test
+loss-test: build/loss_test
+	./build/loss_test
+
+build/loss_test: src/tests/loss_test.cpp src/loss/mse.hpp src/loss/loss_function.hpp src/loss/cross_entropy.hpp src/softmax/softmax.hpp $(MATRIX_SOURCE)
+	mkdir -p build
+	$(CXX) $(CXXFLAGS) $< -o $@

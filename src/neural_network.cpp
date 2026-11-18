@@ -46,7 +46,7 @@ void NeuralNetwork<Optimizer>::backward(const Matrix<Layout::ColumnMajor>& input
         }
     } else {
         auto loss_gradient = loss_->backward(y_hat, y);
-        gradient = softmax::backward(loss_gradient, y, y_hat);
+        gradient = softmax::backward(loss_gradient, y_hat);
     }
     for (size_t i=Layers.size(); i > 1; --i) {
         const size_t index = i - 1;

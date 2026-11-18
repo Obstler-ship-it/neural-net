@@ -17,7 +17,7 @@ void start(){
     // Last Dense-Layer must be size 10
     // Lossfunctions are CrossEntropy and MeanSquareError
 
-    NeuralNetwork<Momentum> net(784, 64, 3);
+    NeuralNetwork<Adam> net(784, 64, 3);
     net.add<Dense>(128);
     net.add<ReLU>();
     net.add<Dense>(32);

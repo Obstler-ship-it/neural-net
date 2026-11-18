@@ -62,8 +62,7 @@ class NeuralNetwork{
             static_assert(std::is_same_v<Component, Dense>, "Nur Dense hat eine Groessenangabe");
             if (output_size == 0)
                 throw std::invalid_argument("Layergroesse muss positiv sein");
-            ReLU default_activation;
-            Layers.emplace_back(current_size, output_size, batch_size, default_activation, optimizer_config);
+            Layers.emplace_back(current_size, output_size, batch_size, optimizer_config);
             activations.push_back(nullptr);
             current_size = output_size;
             number_labels = output_size;
