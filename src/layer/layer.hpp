@@ -28,8 +28,7 @@ class Layer{
         Matrix<Layout::ColumnMajor> a; //public
 
         void rescale_for(const ActivationFunction& activation_function) {
-            W *= activation_function.scale(input_size, output_size)
-                / std::sqrt(6.0f / static_cast<float>(input_size));
+            W *= activation_function.scale(input_size, output_size);
         }
 
     private:
