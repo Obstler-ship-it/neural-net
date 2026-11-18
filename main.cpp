@@ -1,4 +1,5 @@
 #include "mnist_reader/reader.hpp"
+#include "src/random/random.hpp"
 #include "src/neural_network.hpp"
 #include "src/optimizers/momentum.hpp"
 #include "src/optimizers/adam.hpp"
