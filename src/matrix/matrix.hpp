@@ -3,7 +3,6 @@
 
 #include <cstddef>
 #include <sys/types.h>
-#include <random>
 #include <vector>
 
 enum class Initialization {
@@ -117,9 +116,6 @@ Matrix<Layout::ColumnMajor> operator*(const TransposeExpr<L>& A, const Matrix<La
 // funktioniert aber auch für ColumnMajor x RowMajor
 template<Layout L>
 Matrix<Layout::ColumnMajor> operator*(const Matrix<Layout::ColumnMajor>& A, const TransposeExpr<L>& B);
-
-std::mt19937& random_generator();
-void set_random_seed(unsigned int seed);
 
 // Template definitions must be visible when Matrix is instantiated.
 #include "matrix.cpp"

@@ -145,6 +145,7 @@ void NeuralNetwork<Optimizer>::train(
 
         if (precision > best_precision + 0.001f) {
             best_precision = precision;
+            no_improvement = 0;
         }
         else
             ++no_improvement;

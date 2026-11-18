@@ -6,6 +6,7 @@
 #include <cmath>
 #include <stdexcept>
 #include "matrix.hpp"
+#include "../random/random.hpp"
 
 //random number between -1.0 und 1.0
 inline float random_float() {
@@ -232,14 +233,3 @@ void Matrix<L>::print() const {
     }
     std::cout << "]\n";
 }
-
-
-inline std::mt19937& random_generator() {
-    static std::mt19937 generator{42};
-    return generator;
-}
-
-inline void set_random_seed(unsigned int seed) {
-    random_generator().seed(seed);
-}
-
