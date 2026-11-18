@@ -14,8 +14,6 @@ The project has been built with Clang 18 and libstdc++ 14. On Ubuntu, install th
 
 ```bash
 sudo apt install clang g++ cmake curl gzip
-clang++ --version
-cmake --version
 ```
 
 ## Dataset
@@ -32,6 +30,7 @@ data/t10k-labels.idx1-ubyte
 To download them from Microsoft's mirror:
 
 ```bash
+cd neural-net
 mkdir -p data
 curl -fL -o data/train-images.idx3-ubyte.gz https://azureopendatastorage.blob.core.windows.net/mnist/train-images-idx3-ubyte.gz
 curl -fL -o data/train-labels.idx1-ubyte.gz https://azureopendatastorage.blob.core.windows.net/mnist/train-labels-idx1-ubyte.gz
@@ -61,11 +60,11 @@ bash start.sh
 Choose an optimizer as the network's template argument, provide the input width and batch size, then add dense layers and activations in order:
 
 ```cpp
-NeuralNetwork<SGD> net(784, 64, 3, SGD::Config{.learning_rate=0.075f});
-net.add<Dense>(128);
-net.add<ReLU>();
-net.add<Dense>(32);
-net.add<ReLU>();
+NeuralNetwork<SGD> net(784, 64, 4, SGD::Config{.learning_rate=0.075f});
+net.add<Dense>(256);
+net.add<Sigmoid>();
+net.add<Dense>(64);
+net.add<Sigmoid>();
 net.add<Dense>(10);
 net.set_loss<CrossEntropy>();
 
