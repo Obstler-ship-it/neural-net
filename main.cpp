@@ -1,3 +1,4 @@
+#include "loss/mse.hpp"
 #include "mnist_reader/reader.hpp"
 #include "src/random/random.hpp"
 #include "src/neural_network.hpp"
@@ -9,14 +10,14 @@
 #include <print>
 
 void start(){
-    
+
     // Optimizers Adam, SGD, Momentum, RMSprop
     // Input 784, batch_size 64 and early stop 3
     // Activationfunctions are Sigmoid and ReLU
     // Last Dense-Layer must be size 10
-    // Lossfunctions are CrossEntropy and MSE
+    // Lossfunctions are CrossEntropy and MeanSquareError
 
-    NeuralNetwork<Momentum> net(784, 64, 3); 
+    NeuralNetwork<Momentum> net(784, 64, 3);
     net.add<Dense>(128);
     net.add<ReLU>();
     net.add<Dense>(32);
@@ -33,17 +34,25 @@ void start(){
 
 
 int main(){
-    
-    const size_t seed = 19751979;
-    set_random_seed(seed);
+    try {
+        const size_t seed = 19751979;
+        set_random_seed(seed);
 
-    const auto start_time = std::chrono::steady_clock::now();
-    std::println("Started ...");
+        const auto start_time = std::chrono::steady_clock::now();
+        std::println("Started ...");
 
-    start();
+        start();
 
-    const auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
-        std::chrono::steady_clock::now() - start_time).count();
-    std::println("Time {}m{}.{:03}s", elapsed / 60000,
-                 (elapsed / 1000) % 60, elapsed % 1000);
+        const auto elapsed =
+            std::chrono::duration_cast<std::chrono::milliseconds>(
+                std::chrono::steady_clock::now() - start_time).count();
+
+        std::println("Time {}m{}.{:03}s", elapsed / 60000,
+                    (elapsed / 1000) % 60, elapsed % 1000);
+
+        return 0;
+    } catch (const std::exception& error) {
+        std::println(stderr, "Fehler: {}", error.what());
+        return 1;
+    }
 }

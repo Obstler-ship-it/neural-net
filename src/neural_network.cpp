@@ -153,7 +153,7 @@ void NeuralNetwork<Optimizer>::train(
         std::println("Epoch {} validation:, precision {:.4f}, forward {:.1f}, no_improvements {}, digits {}",
             epoch, precision, ms, no_improvement, size);
 
-    } while (no_improvement <= epochs_without_improvement);
+    } while (no_improvement < epochs_without_improvement);
 
     std::println("Training finished after {} epochs ({} total samples).", epoch, count);
 }
